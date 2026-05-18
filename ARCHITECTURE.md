@@ -30,62 +30,70 @@
 
 ---
 
-## 🏗️ 디렉토리 구조
+## 🏗️ 디렉토리 구조 (파일 위치로 구성)
 
 ```
 lib/
-├── main.dart
-├── app.dart
+├── main.dart                           # 앱 진입점
+├── app.dart                            # 루트 위젯 (MaterialApp)
 │
-├── presentation/                  # UI 계층
+├── presentation/                       # 🎨 UI 계층 (screens/, widgets/, theme/)
 │   ├── screens/
 │   │   ├── character_search_screen.dart
 │   │   ├── planner_screen.dart
-│   │   ├── timeline_screen.dart
-│   │   └── settings_screen.dart
-│   └── widgets/
-│       ├── character_card.dart
-│       ├── planner_list_item.dart
-│       ├── timeline_list.dart
-│       └── search_form.dart
+│   │   └── timeline_screen.dart
+│   │
+│   ├── widgets/
+│   │   ├── character_card.dart
+│   │   ├── planner_list_item.dart
+│   │   ├── timeline_list.dart
+│   │   └── search_form.dart
+│   │
+│   └── theme/
+│       ├── app_theme.dart
+│       └── colors.dart
 │
-├── application/                   # 상태 관리 계층
+├── application/                        # 🔄 상태 관리 계층 (view_models/, use_cases/)
 │   ├── view_models/
 │   │   ├── character_search_vm.dart
 │   │   ├── planner_vm.dart
 │   │   └── timeline_vm.dart
-│   └── providers.dart
-│
-├── domain/                        # 비즈니스 로직 계층
-│   ├── entities/
-│   │   ├── character.dart
-│   │   ├── planned_content.dart
-│   │   └── timeline.dart
-│   ├── services/
-│   │   ├── character_service.dart
-│   │   └── timeline_service.dart
+│   │
 │   └── use_cases/
 │       ├── search_character_uc.dart
 │       ├── update_planned_content_uc.dart
 │       └── match_timeline_uc.dart
 │
-├── data/                          # 외부 데이터 계층
-│   ├── repositories/
-│   │   ├── character_repository.dart
-│   │   ├── planner_repository.dart
-│   │   └── timeline_repository.dart
-│   ├── data_sources/
-│   │   ├── neople_api_client.dart
-│   │   └── database_service.dart
-│   └── models/
-│       ├── character_model.dart
-│       ├── planned_content_model.dart
-│       └── timeline_model.dart
+├── domain/                             # 💼 비즈니스 로직 계층 (entities/, services/)
+│   ├── entities/
+│   │   ├── character.dart
+│   │   ├── planned_content.dart
+│   │   └── timeline.dart
+│   │
+│   └── services/
+│       ├── character_service.dart
+│       └── timeline_service.dart
 │
-└── config/
-    ├── constants.dart
-    ├── theme.dart
-    └── routes.dart
+└── data/                               # 💾 외부 데이터 계층 (repositories/, api/, local/)
+    ├── repositories/
+    │   ├── character_repository.dart
+    │   ├── planner_repository.dart
+    │   └── timeline_repository.dart
+    │
+    ├── api/
+    │   ├── neople_api_client.dart
+    │   ├── models/
+    │   │   ├── character_model.dart
+    │   │   └── timeline_model.dart
+    │   └── services/
+    │       └── http_service.dart
+    │
+    └── local/
+        ├── database_service.dart
+        ├── models/
+        │   └── planned_content_model.dart
+        └── migrations/
+            └── v1_schema.dart
 ```
 
 ---
