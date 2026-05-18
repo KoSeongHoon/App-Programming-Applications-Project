@@ -131,7 +131,17 @@ flutter run -d chrome
 
 # Firefox에서 실행
 flutter run -d firefox
+
+# 웹 빌드 후 로컬 서버로 테스트 (포트 8001)
+flutter build web
+cd build/web
+python -m http.server 8001
+
+# 브라우저에서 열기
+# http://localhost:8001
 ```
+
+**참고**: 포트 8000은 다른 프로젝트용으로 예약되어 있으므로 로컬 웹 서버는 **포트 8001**을 고정으로 사용합니다.
 
 ### Release 빌드 (배포용)
 ```bash
