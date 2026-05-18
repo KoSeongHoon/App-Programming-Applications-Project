@@ -26,26 +26,80 @@ flutter pub get
 ```
 
 ### Step 3: 환경 변수 설정
+
+**Windows (PowerShell):**
+```powershell
+# .env.example을 .env로 복사
+Copy-Item .env.example .env
+
+# .env 파일을 메모장으로 열기
+notepad .env
+# 또는 VS Code
+code .env
+```
+
+**macOS/Linux (Terminal):**
 ```bash
 # .env.example을 .env로 복사
 cp .env.example .env
 
-# .env 파일 수정 (텍스트 에디터로 열기)
-# NEOPLE_API_KEY=your_api_key_here 부분에 API 키 입력
+# .env 파일 수정 (nano 에디터)
+nano .env
+# 또는 vi
+vi .env
+# 또는 VS Code
+code .env
 ```
 
+> **참고**: NEOPLE_API_KEY=your_api_key_here 부분에 실제 API 키를 입력하세요.
+
 ### Step 4: 빌드 & 실행
+
+**옵션 A: 웹 브라우저에서 테스트 (가장 빠름, 모든 OS)**
 ```bash
-# 웹 브라우저에서 테스트 (가장 빠름)
+# Chrome에서 실행
 flutter run -d chrome
 
-# 또는 Android 에뮬레이터 (시간이 더 걸림)
+# Firefox에서 실행
+firefox run -d firefox
+```
+
+**옵션 B: Android 에뮬레이터에서 실행**
+
+**Windows:**
+```powershell
+# 에뮬레이터 확인
 flutter emulators
-flutter emulators launch Pixel_6_API_36
+
+# 에뮬레이터 시작 (또는 Android Studio에서 시작)
+flutter emulators --launch Pixel_6_API_36
+
+# 앱 실행
 flutter run
 ```
 
-✅ **완료!** 앱이 실행되면 준비 완료입니다.
+**macOS:**
+```bash
+# 에뮬레이터 확인
+flutter emulators
+
+# iOS 시뮬레이터에서 실행하기 (iOS는 Mac에서만 가능)
+open -a Simulator
+
+# 앱 실행
+flutter run
+```
+
+**Linux:**
+```bash
+# Android 에뮬레이터 실행
+flutter emulators --launch Pixel_6_API_36
+
+# 앱 실행
+flutter run
+```
+
+✅ **완료!** 앱이 실행되고 검색 화면이 나타나면 준비 완료입니다.
 
 ---
 
