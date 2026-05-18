@@ -2,6 +2,51 @@
 
 던전앤파이터 플래너 앱 개발을 위한 환경 구축 단계입니다.
 
+> **⏱️ 5분 빠른 시작**: 아래 "🚀 5분 안에 시작하기" 섹션을 따라하세요.
+
+---
+
+## 🚀 5분 안에 시작하기
+
+**새 개발자도 이 문서만 보고 5분 안에 실행할 수 있습니다.**
+
+### Step 1: 저장소 클론
+```bash
+# 프로젝트 저장소 클론
+git clone https://github.com/YOUR_USERNAME/dungeon-fighter-planner.git
+cd dungeon-fighter-planner
+
+# 또는 로컬 경로에서
+cd App-Programming-Applications-Project
+```
+
+### Step 2: 의존성 설치
+```bash
+flutter pub get
+```
+
+### Step 3: 환경 변수 설정
+```bash
+# .env.example을 .env로 복사
+cp .env.example .env
+
+# .env 파일 수정 (텍스트 에디터로 열기)
+# NEOPLE_API_KEY=your_api_key_here 부분에 API 키 입력
+```
+
+### Step 4: 빌드 & 실행
+```bash
+# 웹 브라우저에서 테스트 (가장 빠름)
+flutter run -d chrome
+
+# 또는 Android 에뮬레이터 (시간이 더 걸림)
+flutter emulators
+flutter emulators launch Pixel_6_API_36
+flutter run
+```
+
+✅ **완료!** 앱이 실행되면 준비 완료입니다.
+
 ---
 
 ## 📋 요구사항
@@ -65,32 +110,39 @@ flutter pub outdated
 
 ## 🔨 3단계: 프로젝트 구조 확인
 
+4-Layer Clean Architecture 구조:
+
 ```
 lib/
 ├── main.dart                    # 앱 진입점
-├── app.dart                     # 루트 위젯
-├── presentation/
-│   ├── screens/
-│   │   ├── character_search_screen.dart
-│   │   ├── planner_screen.dart
-│   │   └── timeline_screen.dart
-│   └── widgets/
-├── application/
-│   ├── view_models/
-│   └── providers.dart          # Riverpod 선언
-├── domain/
-│   ├── entities/
-│   ├── services/
-│   └── use_cases/
-├── data/
-│   ├── repositories/
-│   ├── data_sources/
-│   └── models/
-└── config/
-    ├── constants.dart
-    ├── theme.dart
-    └── routes.dart
+├── app.dart                     # 루트 위젯 (MaterialApp)
+│
+├── presentation/                # 🎨 UI 계층
+│   ├── screens/                 # 화면 (CharacterSearchScreen, PlannerScreen 등)
+│   ├── widgets/                 # 재사용 위젯 (CharacterCard, SearchForm 등)
+│   └── theme/                   # 테마 (colors.dart, app_theme.dart)
+│
+├── application/                 # 🔄 상태 관리 계층
+│   ├── view_models/             # ViewModel (CharacterSearchVM, PlannerVM 등)
+│   └── use_cases/               # UseCase (SearchCharacterUC, UpdatePlannerUC 등)
+│
+├── domain/                      # 💼 비즈니스 로직 계층
+│   ├── entities/                # 데이터 모델 (Character, PlannedContent, Timeline)
+│   └── services/                # 서비스 (CharacterService, TimelineService)
+│
+└── data/                        # 💾 외부 데이터 계층
+    ├── repositories/            # Repository (CharacterRepository, PlannerRepository 등)
+    ├── api/                     # API 통신
+    │   ├── neople_api_client.dart
+    │   ├── models/              # API 응답 모델 (CharacterModel, TimelineModel)
+    │   └── services/            # HTTP 서비스
+    └── local/                   # 로컬 저장소
+        ├── database_service.dart
+        ├── models/              # DB 모델 (PlannedContentModel)
+        └── migrations/          # 스키마 마이그레이션
 ```
+
+**설명**: ARCHITECTURE.md 참고 → [ARCHITECTURE.md](architecture.md)
 
 ---
 
@@ -257,6 +309,17 @@ flutter doctor --android-licenses
 # GPU 가속화 활성화 (Android Studio)
 # Settings > SDK Manager > SDK Tools
 # ☑ Android Emulator > Apply
+```
+
+### 6. ".env 파일을 찾을 수 없습니다"
+```bash
+# .env.example을 .env로 복사
+cp .env.example .env
+# (Windows PowerShell)
+Copy-Item .env.example .env
+
+# .env 파일 편집
+# 텍스트 에디터로 열고 NEOPLE_API_KEY에 값 입력
 ```
 
 ---
