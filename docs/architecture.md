@@ -20,7 +20,7 @@
    └─────────────── 데이터 반환 ────────┘
 ```
 
-### 2. **Riverpod (상태 관리)**
+### 2. **Flutter의 상태 관리 라이브러리 Riverpod**
 앱의 상태를 관리하는 도구:
 - 여러 화면에서 같은 데이터를 쉽게 공유
 - 데이터 변경 시 자동으로 UI 업데이트
@@ -74,7 +74,7 @@ lib/
 │   ├── progress_bar.dart
 │   └── ...
 │
-├── providers/             ← 상태 관리 (Riverpod)
+├── providers/             ← 상태 관리 (Flutter의 상태 관리 라이브러리 Riverpod)
 │   ├── character_provider.dart
 │   └── ...
 │
@@ -99,7 +99,7 @@ lib/
 | **models/** | 데이터 구조 정의 | `class Character { ... }` |
 | **screens/** | 전체 화면 | `class CharacterSearchScreen extends...` |
 | **widgets/** | 화면의 부품 | 카드, 버튼, 진행률 바 |
-| **providers/** | 상태 저장 & 업데이트 | `final characterProvider = ...` |
+| **providers/** | 상태 저장 & 업데이트 (Flutter의 상태 관리 라이브러리 Riverpod) | `final characterProvider = ...` |
 | **repositories/** | 데이터를 어디서 가져올지 | API? DB? 캐시? |
 | **services/** | 실제 작업 | API 호출, DB 저장, 캐시 관리 |
 | **utils/** | 자주 쓰는 도구 | 상수, 함수, 확장 메서드 |
@@ -240,7 +240,7 @@ lib/
   ↓
 [화면 표시] → 사용자가 "검색" 버튼 클릭
   ↓
-[상태 업데이트] → Riverpod이 요청을 받음
+[상태 업데이트] → Flutter의 상태 관리 라이브러리 Riverpod이 요청을 받음
   ↓
 [Repository 호출] → 어디서 데이터를 가져올지 결정
   ↓
@@ -292,7 +292,7 @@ lib/
    Screen → Database (직접 접근)
 ```
 
-### **Riverpod Provider 사용**
+### **Flutter의 상태 관리 라이브러리 Riverpod 사용**
 
 ```dart
 // ✅ 좋은 예
@@ -359,5 +359,5 @@ final character = await service.getCharacter();
 
 ---
 
-**프로젝트 아키텍처**: MVC + Riverpod + SQLite + Caching  
+**프로젝트 아키텍처**: MVC + Flutter의 상태 관리 라이브러리 Riverpod + SQLite + Caching  
 **최종 업데이트**: 2026-05-04

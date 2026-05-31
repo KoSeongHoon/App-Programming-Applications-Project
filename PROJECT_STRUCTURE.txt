@@ -1,0 +1,199 @@
+프로젝트 구조 — 던전앤파이터 플래너 앱 (Flutter)
+
+root/
+├── android/                      # Android 빌드 설정
+├── ios/                          # iOS 빌드 설정
+├── web/                          # Web 빌드 설정
+├── lib/
+│   ├── main.dart                 # 앱 진입점
+│   ├── app.dart                  # 루트 위젯 (MaterialApp)
+│   │
+│   ├── presentation/             # 🎨 UI 계층 (Flutter 위젯)
+│   │   ├── screens/
+│   │   │   ├── character_search_screen.dart
+│   │   │   ├── planner_screen.dart
+│   │   │   ├── timeline_screen.dart
+│   │   │   └── settings_screen.dart
+│   │   │
+│   │   └── widgets/
+│   │       ├── character_card.dart
+│   │       ├── planner_list_item.dart
+│   │       ├── timeline_list.dart
+│   │       ├── search_form.dart
+│   │       └── common/
+│   │           ├── app_bar.dart
+│   │           ├── bottom_navigation.dart
+│   │           ├── loading_spinner.dart
+│   │           └── error_dialog.dart
+│   │
+│   ├── application/              # 🔄 상태 관리 계층 (Riverpod)
+│   │   ├── view_models/
+│   │   │   ├── character_search_vm.dart
+│   │   │   ├── planner_vm.dart
+│   │   │   ├── timeline_vm.dart
+│   │   │   └── settings_vm.dart
+│   │   │
+│   │   └── providers.dart        # 모든 Riverpod Provider 선언
+│   │
+│   ├── domain/                   # 💼 비즈니스 로직 계층
+│   │   ├── entities/
+│   │   │   ├── character.dart
+│   │   │   ├── planned_content.dart
+│   │   │   └── timeline.dart
+│   │   │
+│   │   ├── services/
+│   │   │   ├── character_service.dart
+│   │   │   └── timeline_service.dart
+│   │   │
+│   │   └── use_cases/
+│   │       ├── search_character_uc.dart
+│   │       ├── update_planned_content_uc.dart
+│   │       └── match_timeline_uc.dart
+│   │
+│   ├── data/                     # 💾 외부 데이터 계층
+│   │   ├── repositories/
+│   │   │   ├── character_repository.dart
+│   │   │   ├── planner_repository.dart
+│   │   │   └── timeline_repository.dart
+│   │   │
+│   │   ├── data_sources/
+│   │   │   ├── neople_api_client.dart
+│   │   │   └── database_service.dart
+│   │   │
+│   │   └── models/
+│   │       ├── character_model.dart
+│   │       ├── planned_content_model.dart
+│   │       └── timeline_model.dart
+│   │
+│   └── config/                   # 🔧 설정
+│       ├── constants.dart
+│       ├── theme.dart
+│       └── routes.dart
+│
+├── test/
+│   ├── domain/
+│   │   ├── services/
+│   │   └── use_cases/
+│   ├── data/
+│   │   └── repositories/
+│   └── application/
+│       └── view_models/
+│
+├── docs/
+│   ├── ARCHITECTURE-DIAGRAM.md
+│   ├── SETUP.md
+│   └── API.md
+│
+├── pubspec.yaml                  # 프로젝트 의존성
+├── pubspec.lock
+├── analysis_options.yaml          # Dart 분석 설정
+├── README.md
+├── ARCHITECTURE.md               # 아키텍처 문서
+└── .gitignore
+
+================================================================================
+
+라이브러리 의존성 (pubspec.yaml):
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 상태 관리
+  riverpod: ^2.4.0
+  flutter_riverpod: ^2.4.0
+  riverpod_generator: ^2.3.0
+  
+  # API 통신
+  http: ^1.1.0
+  json_serializable: ^6.7.0
+  json_annotation: ^4.8.0
+  
+  # 로컬 저장소
+  sqflite: ^2.3.0
+  path_provider: ^2.1.0
+  
+  # UI
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # 코드 생성
+  build_runner: ^2.4.0
+  
+  # 테스트
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^2.3.0
+
+================================================================================
+
+계층별 책임:
+
+📊 Presentation
+  ┗ 목표: UI 렌더링만
+  ┗ 파일: *.dart (screen, widget)
+  ┗ 허용: Widget 빌드, 사용자 이벤트
+  ┗ 금지: 비즈니스 로직, API 호출
+
+📊 Application  
+  ┗ 목표: 상태 관리
+  ┗ 파일: *_vm.dart (ViewModel), providers.dart
+  ┗ 허용: StateNotifier, UseCase 호출
+  ┗ 금지: 직접 API/DB 접근
+
+📊 Domain
+  ┗ 목표: 비즈니스 로직
+  ┗ 파일: *.dart (entity, service, use_case)
+  ┗ 허용: 순수 Dart, 로직 구현
+  ┗ 금지: 외부 라이브러리 (Flutter, http)
+
+📊 Data
+  ┗ 목표: 외부 데이터 접근
+  ┗ 파일: *_repository.dart, *_client.dart, *_model.dart
+  ┗ 허용: API 호출, Database, JSON 변환
+  ┗ 금지: 비즈니스 로직
+
+================================================================================
+
+파일 명명 규칙:
+
+Presentation:
+  - screens: *_screen.dart (e.g., character_search_screen.dart)
+  - widgets: *_widget.dart (e.g., character_card.dart)
+
+Application:
+  - viewmodels: *_vm.dart (e.g., character_search_vm.dart)
+
+Domain:
+  - entities: *.dart (e.g., character.dart)
+  - services: *_service.dart (e.g., timeline_service.dart)
+  - use_cases: *_uc.dart (e.g., search_character_uc.dart)
+
+Data:
+  - repositories: *_repository.dart
+  - data_sources: *_client.dart, *_service.dart
+  - models: *_model.dart
+
+================================================================================
+
+빌드 대상:
+
+기본 (필수):
+  ✅ Android (물리 기기 + 에뮬레이터)
+
+선택 (BONUS):
+  ⚠️ iOS (15주차 이후)
+  ⚠️ Web (성능 테스트용)
+  ⚠️ Windows (데스크톱, 선택)
+
+================================================================================
+
+작성: 2026-05-18
+아키텍처: 4-Layer Clean Architecture
+상태 관리: Riverpod (StateNotifier)
+Database: SQLite (sqflite)
+API: Neople API (http)

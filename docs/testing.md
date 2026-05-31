@@ -397,7 +397,7 @@ flutter test --start-paused
 |------|------|
 | Flutter 테스트 공식 | https://flutter.dev/docs/testing |
 | Mockito | https://pub.dev/packages/mockito |
-| Riverpod 테스트 | https://riverpod.dev/docs/essentials/testing |
+| Flutter의 상태 관리 라이브러리 Riverpod 테스트 | https://riverpod.dev/docs/essentials/testing |
 | 테스트 작성 팁 | https://codewithandrea.com/articles/flutter-state-management-riverpod/ |
 
 ---
