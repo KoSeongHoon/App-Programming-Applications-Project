@@ -3,9 +3,18 @@ import 'dart:io';
 
 class DatabaseService {
   static const String dbName = 'planner.db';
-  static const int dbVersion = 1;
+  static const int dbVersion = 2;
 
   late Database _database;
+
+  // 싱글톤 인스턴스
+  static final DatabaseService _instance = DatabaseService._internal();
+
+  factory DatabaseService() {
+    return _instance;
+  }
+
+  DatabaseService._internal();
 
   Future<void> initialize() async {
     final dbPath = await getDatabasesPath();
@@ -14,6 +23,16 @@ class DatabaseService {
     _database = await openDatabase(
       fullPath,
       version: dbVersion,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // v1 → v2: serverId 칼럼 추가
+          try {
+            await db.execute('ALTER TABLE Character ADD COLUMN serverId TEXT DEFAULT "all"');
+          } catch (e) {
+            print('Migration 실패 (이미 존재할 수 있음): $e');
+          }
+        }
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE Character (
@@ -21,6 +40,7 @@ class DatabaseService {
             characterId TEXT NOT NULL UNIQUE,
             name TEXT NOT NULL,
             server TEXT NOT NULL,
+            serverId TEXT DEFAULT 'all',
             class TEXT NOT NULL,
             level INTEGER NOT NULL,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,

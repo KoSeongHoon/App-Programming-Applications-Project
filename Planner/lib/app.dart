@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'presentation/screens/home_screen.dart';
-import 'presentation/screens/character_search_screen.dart';
 import 'presentation/screens/planner_screen.dart';
+import 'presentation/theme/app_theme.dart';
 
 class PlannerApp extends StatelessWidget {
   const PlannerApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '던전앤파이터 플래너',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
+    return ProviderScope(
+      child: MaterialApp(
+        title: '던전앤파이터 플래너',
+        theme: AppTheme.lightTheme,
+        home: const MainNavigationScreen(),
       ),
-      home: const MainNavigationScreen(),
     );
   }
 }
@@ -32,7 +32,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const PlannerScreen(),
-    const CharacterSearchScreen(),
   ];
 
   @override
@@ -49,16 +48,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: '플래너',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: '검색',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: '플래너',
           ),
         ],
       ),

@@ -3,23 +3,23 @@ import '../../domain/entities/character.dart';
 import '../../data/repositories/character_repository.dart';
 
 class CharacterSearchState {
-  final Character? selectedCharacter;
+  final List<Character> searchResults; // 여러 캐릭터 저장
   final bool isLoading;
   final String? errorMessage;
 
   CharacterSearchState({
-    this.selectedCharacter,
+    this.searchResults = const [],
     this.isLoading = false,
     this.errorMessage,
   });
 
   CharacterSearchState copyWith({
-    Character? selectedCharacter,
+    List<Character>? searchResults,
     bool? isLoading,
     String? errorMessage,
   }) {
     return CharacterSearchState(
-      selectedCharacter: selectedCharacter ?? this.selectedCharacter,
+      searchResults: searchResults ?? this.searchResults,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
     );
@@ -32,19 +32,27 @@ class CharacterSearchViewModel extends StateNotifier<CharacterSearchState> {
   CharacterSearchViewModel(this._repository)
       : super(CharacterSearchState());
 
-  Future<void> searchCharacter(String name, String server) async {
+  Future<void> searchCharacter(
+    String name,
+    String server, {
+    bool isGuildSearch = false,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final character = await _repository.searchCharacter(name, server);
-      if (character == null) {
+      final characters = await _repository.searchCharacter(
+        name,
+        server,
+        isGuildSearch: isGuildSearch,
+      );
+      if (characters.isEmpty) {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: '캐릭터를 찾을 수 없습니다.',
+          errorMessage: '검색 결과가 없습니다.',
         );
       } else {
         state = state.copyWith(
-          selectedCharacter: character,
+          searchResults: characters,
           isLoading: false,
         );
       }
@@ -53,6 +61,14 @@ class CharacterSearchViewModel extends StateNotifier<CharacterSearchState> {
         isLoading: false,
         errorMessage: '오류가 발생했습니다: $e',
       );
+    }
+  }
+
+  Future<void> saveCharacterToPlanner(Character character) async {
+    try {
+      await _repository.saveCharacter(character);
+    } catch (e) {
+      rethrow;
     }
   }
 

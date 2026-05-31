@@ -1,275 +1,168 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../theme/app_theme.dart';
+import '../../application/view_models/planner_vm.dart';
+import '../../domain/entities/content_timeline.dart';
+import 'content_status_widget.dart';
 
-class PlannerScreen extends StatefulWidget {
+class PlannerScreen extends ConsumerWidget {
   const PlannerScreen({Key? key}) : super(key: key);
 
   @override
-  State<PlannerScreen> createState() => _PlannerScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plannerState = ref.watch(plannerViewModelProvider);
 
-class _PlannerScreenState extends State<PlannerScreen> {
-  // 더미 데이터
-  final List<Map<String, dynamic>> characters = [
-    {
-      'name': '고성훈',
-      'class': '검술사',
-      'level': 110,
-      'server': '온라인 1서',
-    },
-  ];
-
-  final List<Map<String, dynamic>> plannerItems = [
-    {
-      'name': '상급던전',
-      'completed': false,
-      'difficulty': '상급',
-    },
-    {
-      'name': '프래그만 던전',
-      'completed': true,
-      'difficulty': '일반',
-    },
-    {
-      'name': '마계 협곡',
-      'completed': false,
-      'difficulty': '상급',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('플래너'),
-        backgroundColor: Colors.blue[700],
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-            tooltip: '콘텐츠 추가',
-          ),
-        ],
-      ),
-      body: DefaultTabController(
-        length: 2,
+      body: SafeArea(
         child: Column(
           children: [
-            // 탭 바
-            TabBar(
-              indicatorColor: Colors.blue[700],
-              labelColor: Colors.blue[700],
-              unselectedLabelColor: Colors.grey,
-              tabs: const [
-                Tab(text: '캐릭터'),
-                Tab(text: '콘텐츠'),
-              ],
-            ),
-            // 탭 콘텐츠
-            Expanded(
-              child: TabBarView(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 캐릭터 탭
-                  _buildCharacterTab(),
-                  // 콘텐츠 탭
-                  _buildContentTab(),
+                  Text(
+                    '캐릭터 플래너',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '관리 중: ${plannerState.characters.length}개',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCharacterTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: characters.length,
-      itemBuilder: (context, index) {
-        final character = characters[index];
-        return _CharacterCard(
-          name: character['name'],
-          class_: character['class'],
-          level: character['level'],
-          server: character['server'],
-        );
-      },
-    );
-  }
-
-  Widget _buildContentTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: plannerItems.length,
-      itemBuilder: (context, index) {
-        final item = plannerItems[index];
-        return _PlannerItemCard(
-          name: item['name'],
-          completed: item['completed'],
-          difficulty: item['difficulty'],
-          onChanged: (value) {
-            setState(() {
-              plannerItems[index]['completed'] = value;
-            });
-          },
-        );
-      },
-    );
-  }
-}
-
-class _CharacterCard extends StatelessWidget {
-  final String name;
-  final String class_;
-  final int level;
-  final String server;
-
-  const _CharacterCard({
-    required this.name,
-    required this.class_,
-    required this.level,
-    required this.server,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        class_,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
+            const SizedBox(height: 8),
+            if (plannerState.characters.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text('추가된 캐릭터가 없습니다'),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Lv. $level',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+              )
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        // 각 캐릭터별 정보 + 컨텐츠 상태 표시
+                        ...plannerState.characters.map((character) {
+                          final contentTimeline = plannerState
+                                  .contentTimelines[character.characterId] ??
+                              ContentTimeline();
+
+                          return Column(
+                            children: [
+                              _buildCharacterCard(context, ref, character),
+                              const SizedBox(height: 12),
+                              ContentStatusWidget(
+                                contentTimeline: contentTimeline,
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          );
+                        }).toList(),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  server,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
     );
   }
-}
 
-class _PlannerItemCard extends StatelessWidget {
-  final String name;
-  final bool completed;
-  final String difficulty;
-  final Function(bool) onChanged;
-
-  const _PlannerItemCard({
-    required this.name,
-    required this.completed,
-    required this.difficulty,
-    required this.onChanged,
-  });
-
-  Color _getDifficultyColor() {
-    switch (difficulty) {
-      case '상급':
-        return Colors.red;
-      case '중급':
-        return Colors.orange;
-      default:
-        return Colors.green;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1,
-      child: ListTile(
-        leading: Checkbox(
-          value: completed,
-          onChanged: (value) => onChanged(value ?? false),
-          checkColor: Colors.white,
-          activeColor: Colors.green,
-        ),
-        title: Text(
-          name,
-          style: TextStyle(
-            fontWeight: FontWeight.w500,
-            decoration: completed ? TextDecoration.lineThrough : null,
-            color: completed ? Colors.grey : Colors.black,
+  Widget _buildCharacterCard(BuildContext context, WidgetRef ref, dynamic character) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppTheme.borderColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Image.network(
+            character.imageUrl,
+            width: 80,
+            height: 100,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 80,
+                height: 100,
+                color: AppTheme.borderColor,
+                child: const Icon(Icons.image_not_supported),
+              );
+            },
           ),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: _getDifficultyColor().withOpacity(0.2),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            difficulty,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: _getDifficultyColor(),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  character.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(character.class_),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        character.server,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.accentColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Lv. ${character.level}',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            color: Colors.red[400],
+            onPressed: () {
+              ref
+                  .read(plannerViewModelProvider.notifier)
+                  .deleteCharacter(character.characterId);
+            },
+          ),
+        ],
       ),
     );
   }
