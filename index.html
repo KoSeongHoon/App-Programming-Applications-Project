@@ -7,23 +7,23 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .presentation { background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1200px; width: 100%; overflow: hidden; }
-        .slide { display: none; padding: 70px 80px; min-height: 750px; animation: fadeIn 0.5s; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        .presentation { background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 900px; width: 100%; overflow: hidden; }
+        .slide { display: none; padding: 40px 50px; min-height: 550px; animation: fadeIn 0.5s; }
         .slide.active { display: flex; flex-direction: column; justify-content: center; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .slide-title { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; }
-        .slide-title h1 { font-size: 4.5em; margin-bottom: 30px; font-weight: 800; }
-        .slide-title .subtitle { font-size: 2.2em; margin-bottom: 60px; }
-        .slide-title .author { font-size: 1.3em; opacity: 0.85; }
+        .slide-title h1 { font-size: 3.2em; margin-bottom: 20px; font-weight: 800; }
+        .slide-title .subtitle { font-size: 1.6em; margin-bottom: 40px; }
+        .slide-title .author { font-size: 1em; opacity: 0.85; }
 
-        .slide-planning h2, .slide-architecture h2, .slide-wbs h2 { font-size: 3em; color: #667eea; margin-bottom: 40px; text-align: center; }
+        .slide-planning h2, .slide-architecture h2, .slide-wbs h2 { font-size: 2.2em; color: #667eea; margin-bottom: 25px; text-align: center; }
 
         .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
         .problem-box { background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 35px; border-radius: 12px; border-left: 6px solid #667eea; }
-        .problem-box h3 { font-size: 1.6em; color: #667eea; margin-bottom: 20px; }
-        .problem-box li { font-size: 1.15em; margin-bottom: 15px; color: #333; padding-left: 30px; position: relative; line-height: 1.6; }
+        .problem-box h3 { font-size: 1.2em; color: #667eea; margin-bottom: 15px; }
+        .problem-box li { font-size: 0.95em; margin-bottom: 10px; color: #333; padding-left: 25px; position: relative; line-height: 1.5; }
         .problem-box li:before { content: "●"; position: absolute; left: 0; color: #764ba2; }
 
         .solution-box { background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); padding: 50px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
