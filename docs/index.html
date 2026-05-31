@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>던전앤파이터 플래너 - 중간 발표</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .presentation { background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1200px; width: 100%; overflow: hidden; }
+        .slide { display: none; padding: 70px 80px; min-height: 750px; animation: fadeIn 0.5s; }
+        .slide.active { display: flex; flex-direction: column; justify-content: center; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .slide-title { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; }
+        .slide-title h1 { font-size: 4.5em; margin-bottom: 30px; font-weight: 800; }
+        .slide-title .subtitle { font-size: 2.2em; margin-bottom: 60px; }
+        .slide-title .author { font-size: 1.3em; opacity: 0.85; }
+
+        .slide-planning h2, .slide-architecture h2, .slide-wbs h2 { font-size: 3em; color: #667eea; margin-bottom: 40px; text-align: center; }
+
+        .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+        .problem-box { background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); padding: 35px; border-radius: 12px; border-left: 6px solid #667eea; }
+        .problem-box h3 { font-size: 1.6em; color: #667eea; margin-bottom: 20px; }
+        .problem-box li { font-size: 1.15em; margin-bottom: 15px; color: #333; padding-left: 30px; position: relative; line-height: 1.6; }
+        .problem-box li:before { content: "●"; position: absolute; left: 0; color: #764ba2; }
+
+        .solution-box { background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); padding: 50px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .solution-box h3 { font-size: 1.6em; margin-bottom: 20px; }
+        .solution-box p { font-size: 1.5em; font-weight: 600; line-height: 1.8; }
+
+        .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; }
+        .arch-box { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px solid #667eea; }
+        .mermaid { display: flex; justify-content: center; background: white; padding: 10px; border-radius: 8px; }
+
+        .tech-stack { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px solid #764ba2; }
+        .tech-stack h3 { font-size: 1.6em; color: #764ba2; margin-bottom: 25px; }
+        .tech-list { list-style: none; }
+        .tech-list li { font-size: 1.2em; padding: 12px; margin-bottom: 10px; background: white; border-left: 4px solid #764ba2; border-radius: 5px; }
+        .tech-list strong { color: #667eea; }
+
+        .wbs-box { background: #f8f9fa; padding: 25px; border-radius: 10px; border: 2px solid #667eea; margin-bottom: 30px; }
+        .progress-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .progress-card { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 25px; border-radius: 10px; text-align: center; border: 2px solid #667eea; }
+        .progress-percent { font-size: 3em; font-weight: bold; color: #667eea; margin-bottom: 10px; }
+        .progress-label { font-size: 1.2em; color: #333; font-weight: 600; }
+
+        .controls { background: #f8f9fa; padding: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #e0e0e0; }
+        .nav-buttons { display: flex; gap: 15px; }
+        button { background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 1.05em; font-weight: 600; transition: all 0.3s; }
+        button:hover:not(:disabled) { background: #764ba2; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .slide-counter { font-size: 1.3em; color: #667eea; font-weight: bold; }
+
+        @media (max-width: 900px) { .problem-grid, .arch-grid, .progress-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <div class="slide slide-title active">
+            <h1>🎮 던전앤파이터 플래너</h1>
+            <div class="subtitle">효율적인 주간 컨텐츠 관리를 위한 모바일 앱</div>
+            <div class="author">고성훈 | 앱 프로그래밍 응용</div>
+        </div>
+
+        <div class="slide slide-planning">
+            <h2>📋 기획: 비전 & 문제 정의</h2>
+            <div class="problem-grid">
+                <div class="problem-box">
+                    <h3>🚨 현재의 문제점</h3>
+                    <ul style="list-style: none;">
+                        <li><strong>주간 컨텐츠 관리</strong><br/>상급던전, 레기온, 레이드 등 7개 컨텐츠 관리 필요</li>
+                        <li><strong>반복적 확인 작업</strong><br/>매주 목요일마다 초기화되는 컨텐츠 확인</li>
+                        <li><strong>다중 캐릭터 관리</strong><br/>여러 캐릭터 클리어 상태 추적 불편</li>
+                    </ul>
+                </div>
+
+                <div class="problem-box">
+                    <h3>👥 타겟 사용자</h3>
+                    <ul style="list-style: none;">
+                        <li><strong>던파 게이머</strong><br/>주간 컨텐츠를 효율적으로 관리</li>
+                        <li><strong>멀티 플레이어</strong><br/>여러 캐릭터 운영</li>
+                        <li><strong>시간 효율 추구</strong><br/>게임 진행을 체계적으로 관리</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="solution-box">
+                <h3>💡 우리의 솔루션</h3>
+                <p>한 앱에서 모든 캐릭터의 주간 컨텐츠 클리어 현황을<br/>한눈에 확인하고 관리한다</p>
+            </div>
+        </div>
+
+        <div class="slide slide-architecture">
+            <h2>🏗️ 설계: Clean Architecture</h2>
+            <div class="arch-grid">
+                <div class="arch-box">
+                    <div class="mermaid">
+                        <pre>graph TB
+A["🎨 Presentation<br/>(UI Layer)"]
+B["⚙️ Application<br/>(ViewModel)"]
+C["💼 Domain<br/>(Entity)"]
+D["💾 Data<br/>(API/DB)"]
+
+A -->|의존성| B
+B -->|의존성| C
+C -->|의존성| D</pre>
+                    </div>
+                </div>
+
+                <div class="tech-stack">
+                    <h3>📦 기술 스택</h3>
+                    <ul class="tech-list">
+                        <li><strong>Frontend:</strong> Flutter 3.41.9</li>
+                        <li><strong>Language:</strong> Dart 3.11.5</li>
+                        <li><strong>State Mgmt:</strong> Riverpod</li>
+                        <li><strong>Database:</strong> SQLite</li>
+                        <li><strong>API:</strong> Neople API</li>
+                        <li><strong>Architecture:</strong> Clean 4-Layer</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide slide-wbs">
+            <h2>📊 WBS: 프로젝트 진행 현황</h2>
+            <div class="wbs-box">
+                <div class="mermaid">
+                    <pre>graph TD
+A["🎮 플래너 앱<br/>(전체: 85%)"]
+A -->|100%| B["1️⃣ 기획/설계 ✅"]
+A -->|85%| C["2️⃣ 개발 🔄"]
+A -->|0%| D["3️⃣ 테스트/배포 ⏳"]
+
+C -->|100%| C1["UI 구현"]
+C -->|100%| C2["캐릭터 검색"]
+C -->|90%| C3["타임라인 파싱"]
+C -->|80%| C4["컨텐츠 추적"]</pre>
+                </div>
+            </div>
+
+            <div class="progress-grid">
+                <div class="progress-card">
+                    <div class="progress-percent">100%</div>
+                    <div class="progress-label">기획 & 설계</div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-percent">85%</div>
+                    <div class="progress-label">개발</div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-percent">0%</div>
+                    <div class="progress-label">테스트 & 배포</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button id="prev" onclick="prevSlide()">← 이전</button>
+                <button id="next" onclick="nextSlide()">다음 →</button>
+            </div>
+            <div class="slide-counter">
+                <span id="current">1</span> / 4
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 4;
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            if (n > totalSlides) currentSlide = totalSlides;
+            if (n < 1) currentSlide = 1;
+
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+
+            document.getElementById('current').textContent = currentSlide;
+            document.getElementById('prev').disabled = currentSlide === 1;
+            document.getElementById('next').disabled = currentSlide === totalSlides;
+
+            mermaid.contentLoaded();
+        }
+
+        function nextSlide() { currentSlide++; showSlide(currentSlide); }
+        function prevSlide() { currentSlide--; showSlide(currentSlide); }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
