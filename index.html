@@ -32,7 +32,8 @@
 
         .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; }
         .arch-box { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px solid #667eea; }
-        .mermaid { display: flex; justify-content: center; background: white; padding: 10px; border-radius: 8px; }
+        .mermaid { display: none; }
+        .text-diagram { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px solid #667eea; margin: 20px 0; font-family: monospace; font-size: 1em; line-height: 1.8; white-space: pre-wrap; }
 
         .tech-stack { background: #f8f9fa; padding: 30px; border-radius: 10px; border: 2px solid #764ba2; }
         .tech-stack h3 { font-size: 1.6em; color: #764ba2; margin-bottom: 25px; }
@@ -54,6 +55,27 @@
         .slide-counter { font-size: 1.3em; color: #667eea; font-weight: bold; }
 
         @media (max-width: 900px) { .problem-grid, .arch-grid, .progress-grid { grid-template-columns: 1fr; } }
+
+        /* 앱 화면 이미지 스타일 */
+        .app-screen-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .app-screen {
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #667eea;
+        }
+
+        .app-screen img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -70,7 +92,7 @@
                 <div class="problem-box">
                     <h3>🚨 현재의 문제점</h3>
                     <ul style="list-style: none;">
-                        <li><strong>주간 컨텐츠 관리</strong><br/>상급던전, 레기온, 레이드 등 7개 컨텐츠 관리 필요</li>
+                        <li><strong>주간 컨텐츠 관리</strong><br/>상급던전 7개, 레기온 2개, 레이드 3개 (총 12개) 관리 필요</li>
                         <li><strong>반복적 확인 작업</strong><br/>매주 목요일마다 초기화되는 컨텐츠 확인</li>
                         <li><strong>다중 캐릭터 관리</strong><br/>여러 캐릭터 클리어 상태 추적 불편</li>
                     </ul>
@@ -96,16 +118,14 @@
             <h2>🏗️ 설계: Clean Architecture</h2>
             <div class="arch-grid">
                 <div class="arch-box">
-                    <div class="mermaid">
-                        <pre>graph TB
-A["🎨 Presentation<br/>(UI Layer)"]
-B["⚙️ Application<br/>(ViewModel)"]
-C["💼 Domain<br/>(Entity)"]
-D["💾 Data<br/>(API/DB)"]
-
-A -->|의존성| B
-B -->|의존성| C
-C -->|의존성| D</pre>
+                    <div class="text-diagram">
+Presentation Layer (UI)
+  ↓
+Application Layer (ViewModel)
+  ↓
+Domain Layer (Entity)
+  ↓
+Data Layer (API/DB)
                     </div>
                 </div>
 
@@ -123,20 +143,58 @@ C -->|의존성| D</pre>
             </div>
         </div>
 
+        <!-- 슬라이드 5: 앱 화면 샘플 1 -->
+        <div class="slide slide-content">
+            <h2>📱 실제 앱 화면: 검색 기능</h2>
+            <div class="app-screen-container">
+                <div class="app-screen">
+                    <img src="images/app-search.jpg" alt="검색 화면">
+                </div>
+                <div class="app-screen">
+                    <img src="images/app-search-result.jpg" alt="검색 결과">
+                </div>
+            </div>
+            <h3>✨ 주요 기능</h3>
+            <ul>
+                <li><strong>Neople API 연동</strong> - 공식 게임 DB에서 캐릭터 검색</li>
+                <li><strong>서버 선택</strong> - 원하는 서버별로 필터링</li>
+                <li><strong>실시간 검색</strong> - 캐릭터명 입력 시 즉시 결과 표시</li>
+                <li><strong>캐릭터 추가</strong> - 선택한 캐릭터를 플래너에 추가</li>
+            </ul>
+        </div>
+
+        <!-- 슬라이드 6: 앱 화면 샘플 2 -->
+        <div class="slide slide-content">
+            <h2>📋 실제 앱 화면: 주간 컨텐츠 플래너</h2>
+            <div class="app-screen-container">
+                <div class="app-screen">
+                    <img src="images/app-planner.jpg" alt="플래너 화면">
+                </div>
+                <div class="app-screen">
+                    <img src="images/app-planner-detail.jpg" alt="플래너 상세">
+                </div>
+            </div>
+            <h3>✨ 주간 컨텐츠 관리</h3>
+            <ul>
+                <li><strong>상급던전 7개</strong> - 최후의 과업, 배교자의 성, 별거북 대서고 등</li>
+                <li><strong>레기온 2개</strong> - 아포칼립스, 미의 여신 베누스</li>
+                <li><strong>레이드 3개</strong> - 디레지에, 이내황혼전, 만들어진 신 나벨 (노말/하드)</li>
+                <li><strong>클리어 상태</strong> - ✅/❌ 표시로 진행 상황 한눈에 파악</li>
+            </ul>
+        </div>
+
         <div class="slide slide-wbs">
             <h2>📊 WBS: 프로젝트 진행 현황</h2>
             <div class="wbs-box">
-                <div class="mermaid">
-                    <pre>graph TD
-A["🎮 플래너 앱<br/>(전체: 85%)"]
-A -->|100%| B["1️⃣ 기획/설계 ✅"]
-A -->|85%| C["2️⃣ 개발 🔄"]
-A -->|0%| D["3️⃣ 테스트/배포 ⏳"]
-
-C -->|100%| C1["UI 구현"]
-C -->|100%| C2["캐릭터 검색"]
-C -->|90%| C3["타임라인 파싱"]
-C -->|80%| C4["컨텐츠 추적"]</pre>
+                <div class="text-diagram">
+플래너 앱 (전체 85%)
+├─ 기획/설계: 100% ✅
+├─ 개발: 85% 🔄
+│  ├─ UI 구현: 100%
+│  ├─ 캐릭터 검색: 100%
+│  ├─ 타임라인 파싱: 90%
+│  └─ 컨텐츠 추적: 80%
+└─ 테스트/배포: 0% ⏳
                 </div>
             </div>
 
@@ -162,14 +220,14 @@ C -->|80%| C4["컨텐츠 추적"]</pre>
                 <button id="next" onclick="nextSlide()">다음 →</button>
             </div>
             <div class="slide-counter">
-                <span id="current">1</span> / 4
+                <span id="current">1</span> / 6
             </div>
         </div>
     </div>
 
     <script>
         let currentSlide = 1;
-        const totalSlides = 4;
+        const totalSlides = 6;
         mermaid.initialize({ startOnLoad: true, theme: 'default' });
 
         function showSlide(n) {
