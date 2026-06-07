@@ -24,8 +24,9 @@ android/app/release/
 .vscode/
 
 # Environment
-.env
+# .env는 포함 (API 키 필요)
 .env.local
+.env.*.local
 
 # OS
 .DS_Store
