@@ -1,9 +1,7 @@
 pluginManagement {
-    String home = System.getProperty("user.home")
-    File flutterDir = new File(home, "flutter")
-    String flutterPath = flutterDir.canonicalPath.replace("\\", "/")
-    
-    includeBuild("${flutterPath}/packages/flutter_tools/gradle")
+    def flutterRoot = System.env.FLUTTER_HOME ?: "${System.properties['user.home']}/flutter"
+
+    includeBuild("${flutterRoot}/packages/flutter_tools/gradle")
 
     repositories {
         google()
