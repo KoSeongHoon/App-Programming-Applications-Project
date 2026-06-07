@@ -121,62 +121,74 @@ class NeopleApiClient {
     }
   }
 
-  /// 타임라인 조회 (일주일치 데이터)
+  /// 타임라인 조회 (모든 데이터, next 파라미터로 반복)
   /// /df/servers/{serverId}/characters/{characterId}/timeline 엔드포인트 사용
   Future<List<Map<String, dynamic>>> getCharacterTimeline(
     String characterId,
     String serverId,
   ) async {
+    final allRows = <Map<String, dynamic>>[];
+    String? nextToken;
+
     try {
-      final url = Uri.https(
-        'api.neople.co.kr',
-        '/df/servers/$serverId/characters/$characterId/timeline',
-        {
+      do {
+        final params = {
           'apikey': apiKey,
-          'limit': '100', // 일주일치 데이터 충분
-        },
-      );
+          'limit': '100', // 최대 100개씩
+        };
 
-      print('[DF 타임라인 API] URL: $url');
-      print('[DF 타임라인 API] serverId: $serverId, characterId: $characterId');
-
-      final response = await _httpClient.get(url);
-
-      print('[DF 타임라인 API] 상태코드: ${response.statusCode}');
-      print('[DF 타임라인 API] 응답 길이: ${response.body.length}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        print('[DF 타임라인 API] 파싱된 데이터 키: ${data.keys}');
-
-        // 전체 응답 출력 (처음 2000자)
-        final fullResponse = jsonEncode(data);
-        print('[DF 타임라인 API] 전체 응답: ${fullResponse.substring(0, 2000)}');
-
-        // timeline.rows에서 실제 데이터 추출
-        final timelineObj = data['timeline'] as Map<String, dynamic>?;
-        if (timelineObj == null) {
-          print('[DF 타임라인 API] timeline이 null입니다!');
-          return [];
+        if (nextToken != null) {
+          params['next'] = nextToken;
         }
 
-        final rows = timelineObj['rows'] as List?;
-        print('[DF 타임라인 API] rows 개수: ${rows?.length ?? 0}');
+        final url = Uri.https(
+          'api.neople.co.kr',
+          '/df/servers/$serverId/characters/$characterId/timeline',
+          params,
+        );
 
-        if (rows == null || rows.isEmpty) {
-          print('[DF 타임라인 API] rows가 비어있습니다');
-          return [];
+        print('[DF 타임라인 API] URL: $url');
+        print('[DF 타임라인 API] 현재까지 수집된 행: ${allRows.length}');
+
+        final response = await _httpClient.get(url);
+
+        print('[DF 타임라인 API] 상태코드: ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+          // timeline.rows에서 실제 데이터 추출
+          final timelineObj = data['timeline'] as Map<String, dynamic>?;
+          if (timelineObj == null) {
+            print('[DF 타임라인 API] timeline이 null입니다!');
+            break;
+          }
+
+          final rows = timelineObj['rows'] as List?;
+          if (rows == null || rows.isEmpty) {
+            print('[DF 타임라인 API] 이번 호출에서 rows가 비어있습니다');
+            break;
+          }
+
+          allRows.addAll(rows.cast<Map<String, dynamic>>());
+          print('[DF 타임라인 API] 이번 호출: ${rows.length}개 추가, 총: ${allRows.length}개');
+
+          // 다음 페이지 토큰 확인
+          nextToken = timelineObj['next'] as String?;
+          if (nextToken == null) {
+            print('[DF 타임라인 API] 모든 데이터 수집 완료');
+            break;
+          }
+
+          print('[DF 타임라인 API] 다음 페이지 있음, 계속 호출...');
+        } else {
+          print('[DF 타임라인 API] 오류: 상태코드 ${response.statusCode}');
+          break;
         }
+      } while (nextToken != null);
 
-        final result = rows.cast<Map<String, dynamic>>();
-        print('[DF 타임라인 API] 첫 번째 항목: ${result[0]}');
-
-        return result;
-      }
-
-      print('[DF 타임라인 API] 오류: 상태코드 ${response.statusCode}');
-      print('[DF 타임라인 API] 응답 본문: ${response.body}');
-      return [];
+      print('[DF 타임라인 API] 최종 수집된 행: ${allRows.length}개');
+      return allRows;
     } catch (e) {
       print('[DF 타임라인 API] 예외: $e');
       rethrow;

@@ -339,10 +339,17 @@ class CharacterRepositoryImpl implements CharacterRepository {
       // 타임라인 레코드 파싱
       for (final record in timeline) {
         try {
-          final raidName = record['raidName'] as String? ?? '';
+          final code = record['code'] as int? ?? 0;
           final dateStr = record['date'] as String? ?? '';
-          final mode = record['mode'] as String? ?? 'normal';
-          final isClear = record['clear'] == true;
+          final data = record['data'] as Map<String, dynamic>? ?? {};
+
+          // 던전/레이드 이름 추출
+          final dungeonName = data['dungeonName'] as String? ?? '';
+          final raidName = dungeonName;
+
+          // 클리어 판정: code 506은 보스 클리어, 505는 아이템 획득
+          final isClear = (code == 506 || code == 502); // 502: 보스 클리어, 506: 아이템 획득
+          final mode = 'normal'; // API에는 mode 정보가 없음
 
           // 날짜 파싱
           if (dateStr.isEmpty) continue;
