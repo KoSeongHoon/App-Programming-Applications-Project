@@ -282,13 +282,20 @@ class CharacterRepositoryImpl implements CharacterRepository {
   @override
   Future<ContentTimeline> parseContentTimeline(Character character) async {
     try {
+      print('[parseContentTimeline] 🔄 시작: ${character.name} (${character.characterId})');
+
       // DF 타임라인 API 호출 (올바른 엔드포인트 사용)
+      print('[parseContentTimeline] 📡 API 호출 중...');
       final timeline = await _apiClient
           .getCharacterTimeline(character.characterId, character.serverId)
           .timeout(
             const Duration(seconds: 5),
-            onTimeout: () => [],
+            onTimeout: () {
+              print('[parseContentTimeline] ⏱️ API 호출 timeout!');
+              return [];
+            },
           );
+      print('[parseContentTimeline] ✅ API 호출 완료');
 
       // 🔍 디버깅: API 응답 출력
       print('=== 타임라인 파싱 [${character.name}] ===');
@@ -343,13 +350,24 @@ class CharacterRepositoryImpl implements CharacterRepository {
           final dateStr = record['date'] as String? ?? '';
           final data = record['data'] as Map<String, dynamic>? ?? {};
 
-          // 던전/레이드 이름 추출
+          // 던전/레이드 이름 추출 (API 컬럼 정보 활용)
           final dungeonName = data['dungeonName'] as String? ?? '';
-          final raidName = dungeonName;
+          final raidName = data['raidName'] as String? ?? '';
 
-          // 클리어 판정: code 506은 보스 클리어, 505는 아이템 획득
-          final isClear = (code == 506 || code == 502); // 502: 보스 클리어, 506: 아이템 획득
-          final mode = 'normal'; // API에는 mode 정보가 없음
+          // 코드에 따라 적절한 이름 선택
+          // 201, 210: 레이드 → raidName 사용
+          // 202-209: 던전류 → dungeonName 사용
+          final contentName = (code == 201 || code == 210) ? raidName : dungeonName;
+
+          // 클리어 판정: 코드 201-210은 모두 클리어 기록
+          // 201: 레이드, 202: 비탄의탑, 203: 절망의탑, 204: (구)마수던전,
+          // 205: 제국투기장, 206: 마수던전, 207: 핀드워, 208: 무덤의탑,
+          // 209: 레기온, 210: 레이드(선발대)
+          final isClear = (code >= 201 && code <= 210);
+
+          // hard 필드로 난이도 판정 (API 컬럼 정보)
+          final isHardMode = data['hard'] as bool? ?? false;
+          final mode = isHardMode ? 'hard' : 'normal';
 
           // 날짜 파싱
           if (dateStr.isEmpty) continue;
@@ -367,7 +385,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
           }
 
           // ===== 상급던전 매칭 =====
-          final matchedDungeon = matchDungeonName(raidName);
+          final matchedDungeon = matchDungeonName(contentName);
           if (matchedDungeon != null && dungeonClears.containsKey(matchedDungeon)) {
             if (isClear) {
               dungeonClears[matchedDungeon] = DungeonClear(
@@ -381,7 +399,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
           }
 
           // ===== 레기온 매칭 =====
-          final matchedLegion = matchLegionName(raidName);
+          final matchedLegion = matchLegionName(contentName);
           if (matchedLegion != null && legionClears.containsKey(matchedLegion)) {
             if (isClear) {
               legionClears[matchedLegion] = LegionClear(
@@ -394,9 +412,9 @@ class CharacterRepositoryImpl implements CharacterRepository {
           }
 
           // ===== 레이드 매칭 =====
-          final matchedRaid = matchRaidName(raidName);
+          final matchedRaid = matchRaidName(contentName);
           if (matchedRaid != null && raidClears.containsKey(matchedRaid)) {
-            final isHard = mode.toLowerCase() == 'hard';
+            final isHard = isHardMode;
 
             final existing = raidClears[matchedRaid]!;
             raidClears[matchedRaid] = RaidClear(
@@ -420,8 +438,10 @@ class CharacterRepositoryImpl implements CharacterRepository {
         legions: legionClears.values.toList(),
         raids: raidClears.values.toList(),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       // 전체 실패 시 빈 timeline 반환
+      print('[parseContentTimeline] ❌ 오류 발생: $e');
+      print('[parseContentTimeline] 스택트레이스: $stackTrace');
       return _createEmptyContentTimeline();
     }
   }

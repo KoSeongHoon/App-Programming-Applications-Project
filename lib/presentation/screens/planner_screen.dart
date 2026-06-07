@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../../application/view_models/planner_vm.dart';
 import '../../domain/entities/content_timeline.dart';
+import '../../domain/utils/content_utils.dart';
 import 'content_status_widget.dart';
 
 class PlannerScreen extends ConsumerWidget {
@@ -19,16 +20,45 @@ class PlannerScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '캐릭터 플래너',
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '관리 중: ${plannerState.characters.length}개',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  // 제목과 조회 날짜 범위
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '캐릭터 플래너',
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '관리 중: ${plannerState.characters.length}개',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                      // 조회 시작 날짜 (상단 오른쪽)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '조회 시작',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getStartDateString(),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -165,5 +195,20 @@ class PlannerScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// 조회 시작 날짜를 포맷팅하는 메서드
+  String _getStartDateString() {
+    final now = DateTime.now();
+    final daysToLastThursday = now.weekday > 4 ? now.weekday - 4 : now.weekday + 3;
+    final startDate = now.subtract(Duration(days: daysToLastThursday));
+
+    return '${startDate.month}/${startDate.day} (${_getDayName(startDate)})';
+  }
+
+  /// 요일 이름 반환
+  String _getDayName(DateTime date) {
+    const days = ['월', '화', '수', '목', '금', '토', '일'];
+    return days[date.weekday - 1];
   }
 }
