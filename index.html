@@ -414,56 +414,66 @@ Data Layer (API/DB)</div>
                 <table class="gantt-table">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">작업 항목</th>
-                            <th style="width: 10%;">상태</th>
-                            <th style="width: 65%;">진행 기간</th>
+                            <th style="width: 20%;">단계</th>
+                            <th style="width: 12%;">진행률</th>
+                            <th style="width: 18%;">기간</th>
+                            <th style="width: 50%;">진행 일정</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="task-name">기획/설계</td>
-                            <td>100%</td>
-                            <td><div class="gantt-bar completed" style="width: 12%;">✓</div></td>
+                            <td class="task-name"><strong>기획/설계</strong></td>
+                            <td><span style="color: #4CAF50; font-weight: 700;">100%</span></td>
+                            <td style="font-size: 1em;">4/27 ~ 5/18</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 53.7%; margin-left: 0;">✓ 완료</div>
+                            </td>
                         </tr>
                         <tr>
-                            <td class="task-name">개발</td>
-                            <td>100%</td>
-                            <td><div class="gantt-bar completed" style="width: 35%; margin-left: 13%;">✓</div></td>
+                            <td class="task-name"><strong>개발</strong></td>
+                            <td><span style="color: #4CAF50; font-weight: 700;">100%</span></td>
+                            <td style="font-size: 1em;">5/19 ~ 6/7</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 48.8%; margin-left: 53.7%;">✓ 완료</div>
+                            </td>
                         </tr>
                         <tr>
-                            <td class="task-name level-2">├─ UI 구현</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 10%; margin-left: 13%;"></div></td>
+                            <td class="task-name level-2">  ├─ UI 구현</td>
+                            <td><span style="color: #4CAF50;">✓</span></td>
+                            <td style="font-size: 0.9em;">5/19 ~ 5/25</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 17%; margin-left: 53.7%; font-size: 0.85em;"></div>
+                            </td>
                         </tr>
                         <tr>
-                            <td class="task-name level-2">├─ API 통합</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 12%; margin-left: 25%;"></div></td>
+                            <td class="task-name level-2">  ├─ API 통합</td>
+                            <td><span style="color: #4CAF50;">✓</span></td>
+                            <td style="font-size: 0.9em;">5/26 ~ 5/31</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 12.2%; margin-left: 70.7%; font-size: 0.85em;"></div>
+                            </td>
                         </tr>
                         <tr>
-                            <td class="task-name level-2">├─ 데이터 파싱</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 8%; margin-left: 39%;"></div></td>
+                            <td class="task-name level-2">  ├─ 데이터 파싱</td>
+                            <td><span style="color: #4CAF50;">✓</span></td>
+                            <td style="font-size: 0.9em;">6/1 ~ 6/4</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 9.8%; margin-left: 82.9%; font-size: 0.85em;"></div>
+                            </td>
                         </tr>
                         <tr>
-                            <td class="task-name level-2">└─ 데이터베이스</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 8%; margin-left: 49%;"></div></td>
+                            <td class="task-name level-2">  └─ 데이터베이스</td>
+                            <td><span style="color: #4CAF50;">✓</span></td>
+                            <td style="font-size: 0.9em;">6/5 ~ 6/7</td>
+                            <td style="position: relative; padding: 0;">
+                                <div class="gantt-bar completed" style="width: 7.3%; margin-left: 92.7%; font-size: 0.85em;"></div>
+                            </td>
                         </tr>
-                        <tr>
-                            <td class="task-name">테스트/배포</td>
-                            <td>100%</td>
-                            <td><div class="gantt-bar completed" style="width: 18%; margin-left: 50%;">✓</div></td>
-                        </tr>
-                        <tr>
-                            <td class="task-name level-2">├─ 단위 테스트</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 6%; margin-left: 50%;"></div></td>
-                        </tr>
-                        <tr>
-                            <td class="task-name level-2">└─ APK 빌드</td>
-                            <td>✓</td>
-                            <td><div class="gantt-bar completed" style="width: 6%; margin-left: 58%;"></div></td>
+                        <tr style="background: #fff9e6;">
+                            <td class="task-name"><strong>테스트/배포</strong></td>
+                            <td><span style="color: #FF9800; font-weight: 700;">0%</span></td>
+                            <td style="font-size: 1em;">예정</td>
+                            <td style="text-align: left; padding: 0 10px; font-style: italic; color: #999;">예정 중</td>
                         </tr>
                     </tbody>
                 </table>
