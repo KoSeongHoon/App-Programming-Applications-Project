@@ -1,0 +1,22 @@
+Launching lib\main.dart on SM S938N in debug mode...
+Running Gradle task 'assembleDebug'...                              3.6s
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+Installing build\app\outputs\flutter-apk\app-debug.apk...          12.0s
+D/FlutterJNI( 8600): Beginning load of flutter...
+D/FlutterJNI( 8600): flutter (null) was loaded normally!
+I/flutter ( 8600): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterRenderer( 8600): Width is zero. 0,0
+D/FlutterRenderer( 8600): Width is zero. 0,0
+D/FlutterJNI( 8600): Sending viewport metrics to the engine.
+D/FlutterJNI( 8600): Sending viewport metrics to the engine.
+D/FlutterJNI( 8600): Sending viewport metrics to the engine.
+D/FlutterJNI( 9002): Beginning load of flutter...
+D/FlutterJNI( 9002): flutter (null) was loaded normally!
+I/flutter ( 9002): [IMPORTANT:flutter/shell/platform/android/android_context_vk_impeller.cc(62)] Using the Impeller rendering backend (Vulkan).
+D/FlutterRenderer( 9002): Width is zero. 0,0
+D/FlutterRenderer( 9002): Width is zero. 0,0
+D/FlutterJNI( 9002): Sending viewport metrics to the engine.
+D/FlutterJNI( 9002): Sending viewport metrics to the engine.
+D/FlutterJNI( 9002): Sending viewport metrics to the engine.
+D/FlutterJNI( 9002): Sending viewport metrics to the engine.
+Error connecting to the service protocol: failed to connect to http://127.0.0.1:61019/-_xlWkB-7F4=/ HttpException: Connection closed before full header was received, uri = http://127.0.0.1:61019/-_xlWkB-7F4=/ws
