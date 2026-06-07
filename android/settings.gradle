@@ -1,5 +1,16 @@
 pluginManagement {
-    def flutterRoot = System.env.FLUTTER_HOME ?: "${System.properties['user.home']}/flutter"
+    def flutterRoot = {
+        def localProperties = new File(rootDir, 'local.properties')
+        def properties = new Properties()
+
+        if (localProperties.exists()) {
+            localProperties.withInputStream { stream -> properties.load(stream) }
+        }
+
+        return properties.getProperty('flutter.sdk') ?:
+               System.env.FLUTTER_HOME ?:
+               "${System.properties['user.home']}/flutter"
+    }()
 
     includeBuild("${flutterRoot}/packages/flutter_tools/gradle")
 
