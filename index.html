@@ -152,39 +152,21 @@ Data Layer (API/DB)
             </div>
         </div>
 
-        <!-- 슬라이드 5: 앱 화면 샘플 1 -->
+        <!-- 슬라이드 5: 실제 앱 데모 -->
         <div class="slide slide-content">
-            <h2>📱 실제 앱 화면: 검색 기능</h2>
+            <h2>📱 실제 앱 데모 및 주요 기능</h2>
             <div class="app-screen">
                 <video width="100%" controls autoplay muted loop style="border-radius: 10px;">
                     <source src="images/demo.mp4.mp4" type="video/mp4">
                     <p>영상을 재생할 수 없습니다. 브라우저가 HTML5 비디오를 지원하지 않습니다.</p>
                 </video>
             </div>
-            <h3>✨ 주요 기능</h3>
+            <h3>✨ 구현된 기능</h3>
             <ul>
                 <li><strong>Neople API 연동</strong> - 공식 게임 DB에서 캐릭터 검색</li>
                 <li><strong>서버 선택</strong> - 원하는 서버별로 필터링</li>
-                <li><strong>실시간 검색</strong> - 캐릭터명 입력 시 즉시 결과 표시</li>
-                <li><strong>캐릭터 추가</strong> - 선택한 캐릭터를 플래너에 추가</li>
-            </ul>
-        </div>
-
-        <!-- 슬라이드 6: 앱 화면 샘플 2 -->
-        <div class="slide slide-content">
-            <h2>📋 실제 앱 화면: 주간 컨텐츠 플래너</h2>
-            <div class="app-screen">
-                <video width="100%" controls autoplay muted loop style="border-radius: 10px;">
-                    <source src="images/demo.mp4.mp4" type="video/mp4">
-                    <p>영상을 재생할 수 없습니다. 브라우저가 HTML5 비디오를 지원하지 않습니다.</p>
-                </video>
-            </div>
-            <h3>✨ 주간 컨텐츠 관리</h3>
-            <ul>
-                <li><strong>상급던전 7개</strong> - 최후의 과업, 배교자의 성, 별거북 대서고 등</li>
-                <li><strong>레기온 2개</strong> - 아포칼립스, 미의 여신 베누스</li>
-                <li><strong>레이드 3개</strong> - 디레지에, 이내황혼전, 만들어진 신 나벨 (노말/하드)</li>
-                <li><strong>클리어 상태</strong> - ✅/❌ 표시로 진행 상황 한눈에 파악</li>
+                <li><strong>주간 컨텐츠 플래너</strong> - 상급던전 7개, 레기온 2개, 레이드 3개 관리</li>
+                <li><strong>클리어 추적</strong> - ✅/❌ 표시로 진행 상황 한눈에 파악</li>
             </ul>
         </div>
 
@@ -226,14 +208,14 @@ Data Layer (API/DB)
                 <button id="next" onclick="nextSlide()">다음 →</button>
             </div>
             <div class="slide-counter">
-                <span id="current">1</span> / 6
+                <span id="current">1</span> / 5
             </div>
         </div>
     </div>
 
     <script>
         let currentSlide = 1;
-        const totalSlides = 6;
+        const totalSlides = 5;
         mermaid.initialize({ startOnLoad: true, theme: 'default' });
 
         function showSlide(n) {
