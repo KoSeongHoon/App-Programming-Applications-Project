@@ -77,6 +77,21 @@ class PlannerViewModel extends StateNotifier<PlannerState> {
   Future<void> refreshCharacters() async {
     await _loadCharacters();
   }
+
+  // 특정 캐릭터의 컨텐츠 타임라인 재검색
+  Future<void> refreshContentTimeline(Character character) async {
+    try {
+      final timeline = await _repository.parseContentTimeline(character);
+      final timelines = Map<String, ContentTimeline>.from(state.contentTimelines);
+      timelines[character.characterId] = timeline;
+      state = state.copyWith(contentTimelines: timelines);
+    } catch (e) {
+      // 실패 시 빈 timeline 할당
+      final timelines = Map<String, ContentTimeline>.from(state.contentTimelines);
+      timelines[character.characterId] = ContentTimeline();
+      state = state.copyWith(contentTimelines: timelines);
+    }
+  }
 }
 
 final plannerViewModelProvider =

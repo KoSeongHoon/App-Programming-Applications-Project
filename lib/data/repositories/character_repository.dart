@@ -350,9 +350,13 @@ class CharacterRepositoryImpl implements CharacterRepository {
           final dateStr = record['date'] as String? ?? '';
           final data = record['data'] as Map<String, dynamic>? ?? {};
 
+          print('[DEBUG] 레코드 처리: code=$code, date=$dateStr');
+
           // 던전/레이드 이름 추출 (API 컬럼 정보 활용)
           final dungeonName = data['dungeonName'] as String? ?? '';
           final raidName = data['raidName'] as String? ?? '';
+
+          print('[DEBUG] 추출된 이름: dungeonName=$dungeonName, raidName=$raidName');
 
           // 코드에 따라 적절한 이름 선택
           // 201, 210: 레이드 → raidName 사용
@@ -370,19 +374,22 @@ class CharacterRepositoryImpl implements CharacterRepository {
           final mode = isHardMode ? 'hard' : 'normal';
 
           // 날짜 파싱
-          if (dateStr.isEmpty) continue;
+          if (dateStr.isEmpty) {
+            print('[DEBUG] dateStr이 비어있음');
+            continue;
+          }
 
           DateTime clearDate;
           try {
             clearDate = DateTime.parse(dateStr);
+            print('[DEBUG] 날짜 파싱 성공: $clearDate');
           } catch (e) {
+            print('[DEBUG] 날짜 파싱 실패: $dateStr, 에러: $e');
             continue;
           }
 
-          // 주간 범위 체크
-          if (clearDate.isBefore(startDate) || clearDate.isAfter(endDate)) {
-            continue;
-          }
+          // 주간 범위 체크는 API에서 이미 필터링했으므로 제거
+          // (API 호출 시간과 파싱 시간의 차이로 인한 범위 불일치 방지)
 
           // ===== 상급던전 매칭 =====
           final matchedDungeon = matchDungeonName(contentName);

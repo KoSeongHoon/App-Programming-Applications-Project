@@ -3,7 +3,7 @@ import 'dart:io';
 
 class DatabaseService {
   static const String dbName = 'planner.db';
-  static const int dbVersion = 2;
+  static const int dbVersion = 3;
 
   late Database _database;
 
@@ -43,6 +43,7 @@ class DatabaseService {
             serverId TEXT DEFAULT 'all',
             class TEXT NOT NULL,
             level INTEGER NOT NULL,
+            adventureName TEXT,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(name, server)
           )

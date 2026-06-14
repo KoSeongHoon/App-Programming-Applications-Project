@@ -5,7 +5,7 @@ import 'presentation/screens/planner_screen.dart';
 import 'presentation/theme/app_theme.dart';
 
 class PlannerApp extends StatelessWidget {
-  const PlannerApp({Key? key}) : super(key: key);
+  const PlannerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,7 @@ class PlannerApp extends StatelessWidget {
 }
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({Key? key}) : super(key: key);
+  const MainNavigationScreen({super.key});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();

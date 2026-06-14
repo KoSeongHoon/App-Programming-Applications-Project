@@ -87,6 +87,25 @@ class PlannerScreen extends ConsumerWidget {
                             children: [
                               _buildCharacterCard(context, ref, character),
                               const SizedBox(height: 12),
+                              // 컨텐츠 헤더 + 재검색 버튼
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '주간 컨텐츠',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    onPressed: () {
+                                      ref
+                                          .read(plannerViewModelProvider.notifier)
+                                          .refreshContentTimeline(character);
+                                    },
+                                    tooltip: '클리어 기록 새로고침',
+                                  ),
+                                ],
+                              ),
                               ContentStatusWidget(
                                 contentTimeline: contentTimeline,
                               ),

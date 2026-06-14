@@ -5,7 +5,7 @@ import '../../application/view_models/character_search_vm.dart';
 import '../../domain/entities/character.dart';
 
 class CharacterSearchScreen extends ConsumerStatefulWidget {
-  const CharacterSearchScreen({Key? key}) : super(key: key);
+  const CharacterSearchScreen({super.key});
 
   @override
   ConsumerState<CharacterSearchScreen> createState() =>
@@ -180,7 +180,7 @@ class _CharacterSearchScreenState extends ConsumerState<CharacterSearchScreen> {
                       const SizedBox(height: 16),
                     ],
                   ))
-              .toList(),
+              ,
         ],
       ),
     );
@@ -289,13 +289,7 @@ class _CharacterSearchScreenState extends ConsumerState<CharacterSearchScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('캐릭터가 플래너에 추가되었습니다'),
-                  ),
-                );
-              },
+              onPressed: () => _addCharacterToPlanner(ref, character),
               child: const Text('플래너에 추가'),
             ),
           ),
@@ -345,6 +339,31 @@ class _CharacterSearchScreenState extends ConsumerState<CharacterSearchScreen> {
     ref
         .read(characterSearchViewModelProvider.notifier)
         .searchCharacter(query, server, isGuildSearch: isGuildSearch);
+  }
+
+  Future<void> _addCharacterToPlanner(WidgetRef ref, Character character) async {
+    try {
+      await ref
+          .read(characterSearchViewModelProvider.notifier)
+          .saveCharacterToPlanner(character);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${character.name}이 플래너에 추가되었습니다'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

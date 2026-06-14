@@ -6,7 +6,7 @@ import '../../domain/entities/content_timeline.dart';
 import 'content_status_widget.dart';
 
 class PlannerScreen extends ConsumerWidget {
-  const PlannerScreen({Key? key}) : super(key: key);
+  const PlannerScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +63,7 @@ class PlannerScreen extends ConsumerWidget {
                               const SizedBox(height: 24),
                             ],
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),

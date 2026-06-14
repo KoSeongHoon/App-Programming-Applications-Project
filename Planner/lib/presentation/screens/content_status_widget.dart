@@ -6,9 +6,9 @@ class ContentStatusWidget extends StatelessWidget {
   final ContentTimeline contentTimeline;
 
   const ContentStatusWidget({
-    Key? key,
+    super.key,
     required this.contentTimeline,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class ContentStatusWidget extends StatelessWidget {
         _buildContentSection(
           context,
           '🏰 레기온',
-          '${legionCount}/${contentTimeline.legions.length}',
+          '$legionCount/${contentTimeline.legions.length}',
           contentTimeline.legions,
         ),
         _buildRaidSection(context, contentTimeline.raids),
@@ -117,7 +117,7 @@ class ContentStatusWidget extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -188,7 +188,7 @@ class ContentStatusWidget extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

@@ -16,6 +16,7 @@ abstract class CharacterRepository {
   Future<void> saveCharacter(Character character);
   Future<void> deleteCharacter(String characterId);
   Future<ContentTimeline> parseContentTimeline(Character character);
+  Future<Map<String, dynamic>?> getCharacterInfo(String characterId, String serverId);
 }
 
 class CharacterRepositoryImpl implements CharacterRepository {
@@ -35,106 +36,147 @@ class CharacterRepositoryImpl implements CharacterRepository {
     bool isGuildSearch = false,
   }) async {
     try {
-      // 서버명을 serverId로 변환
-      final serverId = _convertServerNameToId(server);
+      if (isGuildSearch) {
+        // ===== 모험단 검색: 로컬 DB에서만 검색 =====
+        return await _searchGuildFromLocalDb(name);
+      } else {
+        // ===== 일반 캐릭터 검색: API에서 검색 + 기본정보 조회 =====
+        final serverId = _convertServerNameToId(server);
+        final apiResults = await _apiClient.searchCharacter(name, serverId, false);
 
-      // API에서 캐릭터/모험단 검색
-      final apiResults =
-          await _apiClient.searchCharacter(name, serverId, isGuildSearch);
+        if (apiResults == null || apiResults.isEmpty) return [];
 
-      if (apiResults == null || apiResults.isEmpty) return [];
+        final characters = <Character>[];
 
-      // 모든 결과를 Character로 변환
-      final characters = <Character>[];
-
-      for (final apiResult in apiResults) {
-        // 서버 필터링: 선택한 서버와 일치하는 캐릭터만 추가
-        if (server != '전체') {
-          final apiServerId = apiResult['serverId'] as String? ?? '';
-          final selectedServerId = _convertServerNameToId(server);
-          if (apiServerId.toLowerCase() != selectedServerId.toLowerCase()) {
-            // 서버가 일치하지 않으면 스킵
-            continue;
-          }
-        }
-
-        // API 응답에서 서버 정보 추출
-        String serverName = server;
-        String imageServerId = 'pve-1'; // 기본값: 온라인 1서
-
-        if (apiResult.containsKey('serverId')) {
-          final apiServerId = apiResult['serverId'] as String?;
-          if (apiServerId != null) {
-            serverName = _getServerName(apiServerId);
-            imageServerId = apiServerId;
-          }
-        } else if (apiResult.containsKey('server')) {
-          serverName = apiResult['server'] as String? ?? server;
-        }
-
-        // API 응답을 Character 엔티티로 변환
-        final characterId = apiResult['characterId'] as String? ?? '';
-        final imageUrl =
-            'https://img-api.neople.co.kr/df/servers/$imageServerId/characters/$characterId?zoom=1';
-
-        // 클래스명 추출 (여러 필드명 시도)
-        final className = apiResult['characterClass'] ??
-            apiResult['jobName'] ??
-            apiResult['characterJob'] ??
-            apiResult['job'] ??
-            '알 수 없음';
-
-        // 모험단 검색 시: characterInfo에서 추가 정보 조회
-        String? adventureName;
-        List<Map<String, dynamic>> timeline = [];
-
-        if (isGuildSearch) {
+        for (final apiResult in apiResults) {
           try {
-            final characterServerId = apiResult['serverId'] as String? ?? 'all';
+            // 서버 필터링: 선택한 서버와 일치하는 캐릭터만 추가
+            if (server != '전체') {
+              final apiServerId = apiResult['serverId'] as String? ?? '';
+              final selectedServerId = _convertServerNameToId(server);
+              if (apiServerId.toLowerCase() != selectedServerId.toLowerCase()) {
+                continue;
+              }
+            }
 
-            // 캐릭터 정보 조회 (모험단 정보, 타임라인 데이터)
+            // 기본 Character 객체 생성
+            var character = _convertApiResultToCharacter(apiResult, server);
+            if (character == null) continue;
+
+            // 캐릭터 기본정보 조회 (adventureName 포함)
+            final characterId = apiResult['characterId'] as String? ?? '';
+            final characterServerId = apiResult['serverId'] as String? ?? 'pve-1';
+
             final info = await _apiClient.getCharacterInfo(characterId, characterServerId).timeout(
               const Duration(seconds: 3),
               onTimeout: () => null,
             );
 
             if (info != null) {
-              adventureName = info['adventureName'] as String?;
+              final adventureName = info['adventureName'] as String?;
 
-              // adventureName 확인 - 일치하지 않으면 스킵
-              if (adventureName == null || adventureName.toLowerCase() != name.toLowerCase()) {
-                continue;
-              }
-            } else {
-              continue;
+              // adventureName을 포함한 새로운 Character 객체 생성
+              character = Character(
+                id: character.id,
+                characterId: character.characterId,
+                name: character.name,
+                server: character.server,
+                serverId: character.serverId,
+                class_: character.class_,
+                level: character.level,
+                imageUrl: character.imageUrl,
+                createdAt: character.createdAt,
+                adventureName: adventureName,
+                timeline: character.timeline,
+              );
             }
+
+            characters.add(character);
           } catch (e) {
-            // 캐릭터 정보 조회 실패 시 스킵
+            print('캐릭터 정보 조회 실패: $e');
             continue;
           }
         }
 
-        final character = Character(
-          id: 0,
-          characterId: characterId,
-          name: apiResult['characterName'] ?? name,
-          server: serverName,
-          serverId: imageServerId, // 실제 서버 ID 저장 (검색 필터가 아닌)
-          class_: className.toString(),
-          level: (apiResult['level'] as num?)?.toInt() ?? 0,
-          imageUrl: imageUrl,
-          createdAt: DateTime.now(),
-          adventureName: adventureName,
-          timeline: timeline,
-        );
-
-        // DB에 저장하지 않음 (검색 결과만 표시, "플래너에 추가"할 때만 저장)
-        characters.add(character);
+        return characters;
       }
-
-      return characters;
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// 로컬 DB에서 모험단명으로 검색
+  Future<List<Character>> _searchGuildFromLocalDb(String guildName) async {
+    try {
+      final db = _databaseService.database;
+      final maps = await db.query(
+        'Character',
+        where: 'adventureName = ?',
+        whereArgs: [guildName],
+      );
+
+      return maps
+          .map((map) {
+            final characterId = map['characterId'] as String;
+            final serverId = map['serverId'] as String? ?? 'all';
+            final imageUrl =
+                'https://img-api.neople.co.kr/df/servers/$serverId/characters/$characterId?zoom=1';
+
+            return Character(
+              id: map['id'] as int,
+              characterId: characterId,
+              name: map['name'] as String,
+              server: map['server'] as String,
+              serverId: serverId,
+              class_: map['class'] as String,
+              level: map['level'] as int,
+              imageUrl: imageUrl,
+              createdAt: DateTime.parse(map['createdAt'] as String),
+              adventureName: map['adventureName'] as String?,
+            );
+          })
+          .toList();
+    } catch (e) {
+      print('로컬 DB 모험단 검색 오류: $e');
+      return [];
+    }
+  }
+
+  /// API 응답을 Character 엔티티로 변환 (공통 메소드)
+  Character? _convertApiResultToCharacter(
+    Map<String, dynamic> apiResult,
+    String? serverName, [
+    String? adventureName,
+  ]) {
+    try {
+      final characterId = apiResult['characterId'] as String? ?? '';
+      final characterServerId = apiResult['serverId'] as String? ?? 'pve-1';
+      final imageUrl =
+          'https://img-api.neople.co.kr/df/servers/$characterServerId/characters/$characterId?zoom=1';
+
+      final className = apiResult['characterClass'] ??
+          apiResult['jobName'] ??
+          apiResult['characterJob'] ??
+          apiResult['job'] ??
+          '알 수 없음';
+
+      final finalServerName = serverName ?? _getServerName(characterServerId);
+
+      return Character(
+        id: 0,
+        characterId: characterId,
+        name: apiResult['characterName'] ?? '',
+        server: finalServerName,
+        serverId: characterServerId,
+        class_: className.toString(),
+        level: (apiResult['level'] as num?)?.toInt() ?? 0,
+        imageUrl: imageUrl,
+        createdAt: DateTime.now(),
+        adventureName: adventureName,
+      );
+    } catch (e) {
+      print('캐릭터 변환 오류: $e');
+      return null;
     }
   }
 
@@ -234,6 +276,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
               level: map['level'] as int,
               imageUrl: imageUrl,
               createdAt: DateTime.parse(map['createdAt'] as String),
+              adventureName: map['adventureName'] as String?,
             );
           })
           .toList();
@@ -255,6 +298,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
           'serverId': character.serverId,
           'class': character.class_,
           'level': character.level,
+          'adventureName': character.adventureName,
           'createdAt': character.createdAt.toIso8601String(),
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
@@ -275,6 +319,20 @@ class CharacterRepositoryImpl implements CharacterRepository {
       );
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// 캐릭터 기본정보 조회 (adventureName 포함)
+  @override
+  Future<Map<String, dynamic>?> getCharacterInfo(
+    String characterId,
+    String serverId,
+  ) async {
+    try {
+      return await _apiClient.getCharacterInfo(characterId, serverId);
+    } catch (e) {
+      print('캐릭터 정보 조회 오류: $e');
+      return null;
     }
   }
 

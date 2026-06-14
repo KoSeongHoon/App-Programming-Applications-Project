@@ -6,7 +6,7 @@ import '../../application/view_models/planner_vm.dart';
 import '../../domain/entities/character.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -190,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   const SizedBox(height: 16),
                                 ],
                               ))
-                          .toList(),
+                          ,
                     ],
                   ),
                 ),
