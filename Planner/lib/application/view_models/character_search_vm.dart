@@ -94,7 +94,11 @@ class CharacterSearchViewModel extends StateNotifier<CharacterSearchState> {
         }
       }
 
+      // Character 저장
       await _repository.saveCharacter(characterToSave);
+
+      // PlannerItem에도 추가 ✅
+      await _repository.addCharacterToPlanner(character.characterId);
     } catch (e) {
       rethrow;
     }

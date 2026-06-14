@@ -18,18 +18,43 @@ class PlannerScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '캐릭터 플래너',
-                    style: Theme.of(context).textTheme.headlineLarge,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '캐릭터 플래너',
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '관리 중: ${plannerState.characters.length}개',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '관리 중: ${plannerState.characters.length}개',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  if (plannerState.isLoading)
+                    const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: () {
+                        ref
+                            .read(plannerViewModelProvider.notifier)
+                            .refreshCharacters();
+                      },
+                    ),
                 ],
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/character.dart';
 import '../../domain/entities/content_timeline.dart';
 import '../../domain/utils/content_utils.dart';
@@ -13,7 +14,9 @@ abstract class CharacterRepository {
     bool isGuildSearch = false,
   });
   Future<List<Character>> getAllCharacters();
+  Future<List<Character>> getPlannerCharacters();
   Future<void> saveCharacter(Character character);
+  Future<void> addCharacterToPlanner(String characterId);
   Future<void> deleteCharacter(String characterId);
   Future<ContentTimeline> parseContentTimeline(Character character);
   Future<Map<String, dynamic>?> getCharacterInfo(String characterId, String serverId);
@@ -36,70 +39,103 @@ class CharacterRepositoryImpl implements CharacterRepository {
     bool isGuildSearch = false,
   }) async {
     try {
+      // ===== 모험단 검색: DB에서 adventureName + 서버로 필터링 =====
       if (isGuildSearch) {
-        // ===== 모험단 검색: 로컬 DB에서만 검색 =====
-        return await _searchGuildFromLocalDb(name);
-      } else {
-        // ===== 일반 캐릭터 검색: API에서 검색 + 기본정보 조회 =====
-        final serverId = _convertServerNameToId(server);
-        final apiResults = await _apiClient.searchCharacter(name, serverId, false);
+        final allCharacters = await getAllCharacters();
+        return allCharacters
+            .where((c) {
+              // 모험단명 매칭
+              final adventureMatch = (c.adventureName ?? '').contains(name);
+              if (!adventureMatch) return false;
 
-        if (apiResults == null || apiResults.isEmpty) return [];
-
-        final characters = <Character>[];
-
-        for (final apiResult in apiResults) {
-          try {
-            // 서버 필터링: 선택한 서버와 일치하는 캐릭터만 추가
-            if (server != '전체') {
-              final apiServerId = apiResult['serverId'] as String? ?? '';
-              final selectedServerId = _convertServerNameToId(server);
-              if (apiServerId.toLowerCase() != selectedServerId.toLowerCase()) {
-                continue;
+              // 서버 필터링 (선택한 서버와 일치)
+              if (server != '전체') {
+                return c.server == server;
               }
-            }
-
-            // 기본 Character 객체 생성
-            var character = _convertApiResultToCharacter(apiResult, server);
-            if (character == null) continue;
-
-            // 캐릭터 기본정보 조회 (adventureName 포함)
-            final characterId = apiResult['characterId'] as String? ?? '';
-            final characterServerId = apiResult['serverId'] as String? ?? 'pve-1';
-
-            final info = await _apiClient.getCharacterInfo(characterId, characterServerId).timeout(
-              const Duration(seconds: 3),
-              onTimeout: () => null,
-            );
-
-            if (info != null) {
-              final adventureName = info['adventureName'] as String?;
-
-              // adventureName을 포함한 새로운 Character 객체 생성
-              character = Character(
-                id: character.id,
-                characterId: character.characterId,
-                name: character.name,
-                server: character.server,
-                serverId: character.serverId,
-                class_: character.class_,
-                level: character.level,
-                imageUrl: character.imageUrl,
-                createdAt: character.createdAt,
-                adventureName: adventureName,
-                timeline: character.timeline,
-              );
-            }
-
-            characters.add(character);
-          } catch (e) {
-            print('캐릭터 정보 조회 실패: $e');
-            continue;
-          }
-        }
-
-        return characters;
+              return true;
+            })
+            .toList();
       }
+
+      // ===== 일반 캐릭터 검색 (서버 필터 적용) =====
+      final serverId = _convertServerNameToId(server);
+      final apiResults = await _apiClient.searchCharacter(name, serverId, false);
+
+      if (apiResults == null || apiResults.isEmpty) return [];
+
+      final characters = <Character>[];
+      final processedCharacterIds = <String>{}; // 중복 방지
+
+      for (final apiResult in apiResults) {
+        final characterId = apiResult['characterId'] as String? ?? '';
+
+        // 같은 캐릭터는 한 번만 처리
+        if (processedCharacterIds.contains(characterId)) {
+          continue;
+        }
+        processedCharacterIds.add(characterId);
+        try {
+          final characterServerId = apiResult['serverId'] as String? ?? 'pve-1';
+          final characterName = apiResult['characterName'] as String? ?? '';
+
+          // 서버 필터링 (선택한 서버와 일치하는 캐릭터만)
+          if (server != '전체') {
+            final selectedServerId = _convertServerNameToId(server);
+            if (characterServerId.toLowerCase() != selectedServerId.toLowerCase()) {
+              continue;
+            }
+          }
+
+          // 1️⃣ 기본 Character 객체 생성
+          var character = _convertApiResultToCharacter(apiResult, server);
+          if (character == null) continue;
+
+          // 2️⃣ 캐릭터 기본정보 조회 (adventureName 추출)
+          if (kDebugMode) print('[모험단 추출] 정보 조회 시작...');
+          final info = await _apiClient.getCharacterInfo(characterId, characterServerId).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => null,
+          );
+
+          String? adventureName;
+          if (info != null && info.containsKey('adventureName')) {
+            adventureName = info['adventureName'] as String?;
+            if (kDebugMode) print('[모험단 추출] 모험단 정보 추출');
+          } else {
+            if (kDebugMode) print('[모험단 추출] 모험단 정보 없음');
+          }
+
+          // 3️⃣ adventureName과 함께 Character 객체 업데이트
+          character = Character(
+            id: character.id,
+            characterId: character.characterId,
+            name: character.name,
+            server: character.server,
+            serverId: character.serverId,
+            class_: character.class_,
+            level: character.level,
+            imageUrl: character.imageUrl,
+            createdAt: character.createdAt,
+            adventureName: adventureName,
+            timeline: character.timeline,
+          );
+
+          // 4️⃣ DB에 자동 저장
+          try {
+            await saveCharacter(character);
+            if (kDebugMode) print('[모험단 추출] DB 저장 완료');
+          } catch (e) {
+            if (kDebugMode) print('[모험단 추출] DB 저장 실패: $e');
+          }
+
+          characters.add(character);
+        } catch (e) {
+          if (kDebugMode) print('[모험단 추출] 오류 - $e');
+          continue;
+        }
+      }
+
+      return characters;
     } catch (e) {
       rethrow;
     }
@@ -137,7 +173,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
           })
           .toList();
     } catch (e) {
-      print('로컬 DB 모험단 검색 오류: $e');
+      if (kDebugMode) print('로컬 DB 모험단 검색 오류: $e');
       return [];
     }
   }
@@ -160,7 +196,10 @@ class CharacterRepositoryImpl implements CharacterRepository {
           apiResult['job'] ??
           '알 수 없음';
 
-      final finalServerName = serverName ?? _getServerName(characterServerId);
+      // 서버명 결정: "전체"는 실제 서버명으로 변환, 그 외는 그대로 사용
+      final finalServerName = (serverName == '전체' || serverName == null)
+          ? _getServerName(characterServerId)
+          : serverName;
 
       return Character(
         id: 0,
@@ -175,7 +214,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
         adventureName: adventureName,
       );
     } catch (e) {
-      print('캐릭터 변환 오류: $e');
+      if (kDebugMode) print('캐릭터 변환 오류: $e');
       return null;
     }
   }
@@ -285,10 +324,60 @@ class CharacterRepositoryImpl implements CharacterRepository {
     }
   }
 
+  /// 플래너에 추가된 캐릭터만 가져오기
+  Future<List<Character>> getPlannerCharacters() async {
+    try {
+      final db = _databaseService.database;
+
+      // PlannerItem에 있는 characterId들을 가져옴
+      final plannerItems = await db.query('PlannerItem');
+      final plannerCharacterIds = <String>{};
+
+      for (final item in plannerItems) {
+        final characterId = item['characterId'] as String?;
+        if (characterId != null) {
+          plannerCharacterIds.add(characterId);
+        }
+      }
+
+      if (plannerCharacterIds.isEmpty) return [];
+
+      // Character 테이블에서 planner에 있는 캐릭터들만 가져옴
+      final maps = await db.query('Character');
+
+      return maps
+          .where((map) => plannerCharacterIds.contains(map['characterId']))
+          .map((map) {
+            final characterId = map['characterId'] as String;
+            final serverId = map['serverId'] as String? ?? 'all';
+            final imageUrl =
+                'https://img-api.neople.co.kr/df/servers/$serverId/characters/$characterId?zoom=1';
+
+            return Character(
+              id: map['id'] as int,
+              characterId: characterId,
+              name: map['name'] as String,
+              server: map['server'] as String,
+              serverId: serverId,
+              class_: map['class'] as String,
+              level: map['level'] as int,
+              imageUrl: imageUrl,
+              createdAt: DateTime.parse(map['createdAt'] as String),
+              adventureName: map['adventureName'] as String?,
+            );
+          })
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   @override
   Future<void> saveCharacter(Character character) async {
     try {
       final db = _databaseService.database;
+      if (kDebugMode) print('[DB 저장] 진행 중...');
+
       await db.insert(
         'Character',
         {
@@ -303,6 +392,27 @@ class CharacterRepositoryImpl implements CharacterRepository {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+      if (kDebugMode) print('[DB 저장] 완료');
+    } catch (e) {
+      if (kDebugMode) print('[DB 저장] 오류: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> addCharacterToPlanner(String characterId) async {
+    try {
+      final db = _databaseService.database;
+      await db.insert(
+        'PlannerItem',
+        {
+          'characterId': characterId,
+          'contentName': 'planner',
+          'isCompleted': 0,
+          'createdAt': DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore, // 중복 무시
+      );
     } catch (e) {
       rethrow;
     }
@@ -312,8 +422,15 @@ class CharacterRepositoryImpl implements CharacterRepository {
   Future<void> deleteCharacter(String characterId) async {
     try {
       final db = _databaseService.database;
+      // Character 삭제
       await db.delete(
         'Character',
+        where: 'characterId = ?',
+        whereArgs: [characterId],
+      );
+      // PlannerItem도 함께 삭제
+      await db.delete(
+        'PlannerItem',
         where: 'characterId = ?',
         whereArgs: [characterId],
       );
@@ -331,7 +448,7 @@ class CharacterRepositoryImpl implements CharacterRepository {
     try {
       return await _apiClient.getCharacterInfo(characterId, serverId);
     } catch (e) {
-      print('캐릭터 정보 조회 오류: $e');
+      if (kDebugMode) print('캐릭터 정보 조회 오류: $e');
       return null;
     }
   }
@@ -348,16 +465,13 @@ class CharacterRepositoryImpl implements CharacterRepository {
             onTimeout: () => [],
           );
 
-      // 🔍 디버깅: API 응답 출력
-      print('=== 타임라인 파싱 [${character.name}] ===');
-      print('응답 개수: ${timeline.length}');
-      if (timeline.isNotEmpty) {
-        print('첫 번째 응답: ${timeline[0]}');
-        print('응답 키: ${timeline[0].keys}');
+      if (kDebugMode) {
+        print('=== 타임라인 파싱 ===');
+        print('응답 개수: ${timeline.length}');
       }
 
       if (timeline.isEmpty) {
-        print('[경고] 타임라인이 비어있습니다');
+        if (kDebugMode) print('[경고] 타임라인이 비어있습니다');
         return _createEmptyContentTimeline();
       }
 
@@ -397,10 +511,18 @@ class CharacterRepositoryImpl implements CharacterRepository {
       // 타임라인 레코드 파싱
       for (final record in timeline) {
         try {
-          final raidName = record['raidName'] as String? ?? '';
+          final code = record['code'] as int? ?? 0;
+          final data = record['data'] as Map<String, dynamic>? ?? {};
+          final raidName = (data['raidName'] as String?) ?? '';
+          final dungeonName = (data['dungeonName'] as String?) ?? '';
+          final regionName = (data['regionName'] as String?) ?? '';
+          final name = record['name'] as String? ?? '';
           final dateStr = record['date'] as String? ?? '';
-          final mode = record['mode'] as String? ?? 'normal';
-          final isClear = record['clear'] == true;
+          final isClear = true; // API 응답에 clear 필드 없음, 모두 클리어로 간주
+
+          // hard 필드로 난이도 판단 (true=hard, false=normal)
+          final hardField = data['hard'] as bool? ?? false;
+          final isHard = hardField;
 
           // 날짜 파싱
           if (dateStr.isEmpty) continue;
@@ -417,24 +539,10 @@ class CharacterRepositoryImpl implements CharacterRepository {
             continue;
           }
 
-          // ===== 상급던전 매칭 =====
-          final matchedDungeon = matchDungeonName(raidName);
-          if (matchedDungeon != null && dungeonClears.containsKey(matchedDungeon)) {
-            if (isClear) {
-              dungeonClears[matchedDungeon] = DungeonClear(
-                name: matchedDungeon,
-                cleared: true,
-                clearedDate: clearDate,
-                difficulty: mode,
-              );
-            }
-            continue;
-          }
-
-          // ===== 레기온 매칭 =====
-          final matchedLegion = matchLegionName(raidName);
-          if (matchedLegion != null && legionClears.containsKey(matchedLegion)) {
-            if (isClear) {
+          // ===== code 209: 레기온 클리어 (regionName으로 매칭) =====
+          if (code == 209 && regionName.isNotEmpty) {
+            final matchedLegion = matchLegionName(regionName);
+            if (matchedLegion != null && legionClears.containsKey(matchedLegion)) {
               legionClears[matchedLegion] = LegionClear(
                 name: matchedLegion,
                 cleared: true,
@@ -444,19 +552,49 @@ class CharacterRepositoryImpl implements CharacterRepository {
             continue;
           }
 
-          // ===== 레이드 매칭 =====
-          final matchedRaid = matchRaidName(raidName);
-          if (matchedRaid != null && raidClears.containsKey(matchedRaid)) {
-            final isHard = mode.toLowerCase() == 'hard';
+          // ===== code 201: 레이드 =====
+          if (code == 201) {
+            final matchedRaid = matchRaidName(raidName);
+            if (matchedRaid != null && raidClears.containsKey(matchedRaid)) {
+              final existing = raidClears[matchedRaid]!;
+              raidClears[matchedRaid] = RaidClear(
+                name: matchedRaid,
+                normalCleared: isHard ? existing.normalCleared : (isClear || existing.normalCleared),
+                hardCleared: isHard ? (isClear || existing.hardCleared) : existing.hardCleared,
+                normalClearedDate: !isHard && isClear ? clearDate : existing.normalClearedDate,
+                hardClearedDate: isHard && isClear ? clearDate : existing.hardClearedDate,
+              );
+            }
+            continue;
+          }
 
-            final existing = raidClears[matchedRaid]!;
-            raidClears[matchedRaid] = RaidClear(
-              name: matchedRaid,
-              normalCleared: isHard ? existing.normalCleared : (isClear || existing.normalCleared),
-              hardCleared: isHard ? (isClear || existing.hardCleared) : existing.hardCleared,
-              normalClearedDate: !isHard && isClear ? clearDate : existing.normalClearedDate,
-              hardClearedDate: isHard && isClear ? clearDate : existing.hardClearedDate,
-            );
+          // ===== 상급던전 (dungeonName으로 매칭 - 모든 code) =====
+          if (dungeonName.isNotEmpty) {
+            final matchedDungeon = matchDungeonName(dungeonName);
+            if (matchedDungeon != null && dungeonClears.containsKey(matchedDungeon)) {
+              if (isClear) {
+                dungeonClears[matchedDungeon] = DungeonClear(
+                  name: matchedDungeon,
+                  cleared: true,
+                  clearedDate: clearDate,
+                  difficulty: isHard ? 'hard' : 'normal',
+                );
+              }
+              continue;
+            }
+          }
+
+          // ===== 기타 컨텐츠 (raidName 기반 매칭) =====
+          final matchedDungeon = matchDungeonName(raidName);
+          if (matchedDungeon != null && dungeonClears.containsKey(matchedDungeon)) {
+            if (isClear) {
+              dungeonClears[matchedDungeon] = DungeonClear(
+                name: matchedDungeon,
+                cleared: true,
+                clearedDate: clearDate,
+                difficulty: isHard ? 'hard' : 'normal',
+              );
+            }
             continue;
           }
         } catch (e) {

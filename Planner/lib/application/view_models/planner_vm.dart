@@ -37,7 +37,7 @@ class PlannerViewModel extends StateNotifier<PlannerState> {
   Future<void> _loadCharacters() async {
     state = state.copyWith(isLoading: true);
     try {
-      final characters = await _repository.getAllCharacters();
+      final characters = await _repository.getPlannerCharacters();
 
       // 각 캐릭터의 컨텐츠 타임라인 로드
       final timelines = <String, ContentTimeline>{};

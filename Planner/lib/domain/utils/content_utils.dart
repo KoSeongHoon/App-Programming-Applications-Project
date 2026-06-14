@@ -52,8 +52,12 @@ const Map<String, String> dungeonNameMap = {
 const Map<String, String> legionNameMap = {
   '아포칼립스': '아포칼립스',
   'Apocalypse': '아포칼립스',
+  '아포칼립스 군단': '아포칼립스',
+  'Apocalypse Legion': '아포칼립스',
   '미의 여신 베누스': '미의 여신 베누스',
   'Goddess Venus': '미의 여신 베누스',
+  '비너스 군단': '미의 여신 베누스',
+  'Venus Legion': '미의 여신 베누스',
 };
 
 /// 레이드 매핑

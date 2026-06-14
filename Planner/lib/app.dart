@@ -14,6 +14,7 @@ class PlannerApp extends StatelessWidget {
         title: '던전앤파이터 플래너',
         theme: AppTheme.lightTheme,
         home: const MainNavigationScreen(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

@@ -18,6 +18,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final List<String> filterOptions = [
     '전체',
+    '모험단',
     '카인',
     '디레지에',
     '시로코',
@@ -103,7 +104,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: '캐릭터명 입력',
+                            hintText: _selectedFilter == '모험단'
+                                ? '모험단명 입력'
+                                : '캐릭터명 입력',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -374,11 +377,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    final server = _selectedFilter;
+    final isGuildSearch = _selectedFilter == '모험단';
+    // 모험단 검색일 때는 server를 "전체"로 (서버 제한 없음)
+    // 일반 검색일 때는 선택한 서버 사용
+    final server = isGuildSearch ? '전체' : _selectedFilter;
 
     ref
         .read(characterSearchViewModelProvider.notifier)
-        .searchCharacter(query, server, isGuildSearch: false);
+        .searchCharacter(query, server, isGuildSearch: isGuildSearch);
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 class NeopleApiClient {
   static const String baseUrl = 'https://api.neople.co.kr';
@@ -68,31 +69,34 @@ class NeopleApiClient {
         },
       );
 
-      print('[타임라인 API] URL: $url');
-      print('[타임라인 API] characterId: $characterId');
+      if (kDebugMode) {
+        print('[타임라인 API] characterId: $characterId');
+      }
 
       final response = await _httpClient.get(url);
 
-      print('[타임라인 API] 상태코드: ${response.statusCode}');
-      print('[타임라인 API] 응답 길이: ${response.body.length}');
+      if (kDebugMode) {
+        print('[타임라인 API] 상태코드: ${response.statusCode}');
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        print('[타임라인 API] 파싱된 데이터: $data');
         final rows = data['rows'] as List?;
-        print('[타임라인 API] rows 개수: ${rows?.length ?? 0}');
         return (rows ?? []).cast<Map<String, dynamic>>();
       }
-      print('[타임라인 API] 오류: 상태코드 ${response.statusCode}');
-      print('[타임라인 API] 응답 본문: ${response.body}');
+      if (kDebugMode) {
+        print('[타임라인 API] 오류: ${response.statusCode}');
+      }
       return [];
     } catch (e) {
-      print('[타임라인 API] 예외: $e');
+      if (kDebugMode) {
+        print('[타임라인 API] 예외: $e');
+      }
       rethrow;
     }
   }
 
-  /// 캐릭터 정보 조회 (adventureName 포함)
+  /// 캐릭터 정보 조회 (adventureName 포함) - 기본 캐릭터 정보 엔드포인트 사용
   Future<Map<String, dynamic>?> getCharacterInfo(
     String characterId,
     String serverId,
@@ -100,24 +104,29 @@ class NeopleApiClient {
     try {
       final url = Uri.https(
         'api.neople.co.kr',
-        '/df/servers/$serverId/characters/$characterId/timeline',
-        {'apikey': apiKey, 'limit': '1'},
+        '/df/servers/$serverId/characters/$characterId',
+        {'apikey': apiKey},
       );
 
       final response = await _httpClient.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        // adventureName을 포함한 전체 응답 반환
         return {
           'adventureName': data['adventureName'],
           'characterName': data['characterName'],
           'serverId': data['serverId'],
         };
       }
+      if (kDebugMode) {
+        print('[캐릭터 정보 API] 오류: ${response.statusCode}');
+      }
       return null;
     } catch (e) {
-      return null; // 예외 발생 시 null 반환
+      if (kDebugMode) {
+        print('[캐릭터 정보 API] 예외: $e');
+      }
+      return null;
     }
   }
 
@@ -128,55 +137,57 @@ class NeopleApiClient {
     String serverId,
   ) async {
     try {
-      final url = Uri.https(
-        'api.neople.co.kr',
-        '/df/servers/$serverId/characters/$characterId/timeline',
-        {
+      final allRows = <Map<String, dynamic>>[];
+      String? next;
+      int pageCount = 0;
+
+      // 페이지네이션: next 토큰이 있으면 계속 가져오기
+      do {
+        pageCount++;
+        final params = {
           'apikey': apiKey,
-          'limit': '100', // 일주일치 데이터 충분
-        },
-      );
+          'limit': '100',
+        };
 
-      print('[DF 타임라인 API] URL: $url');
-      print('[DF 타임라인 API] serverId: $serverId, characterId: $characterId');
-
-      final response = await _httpClient.get(url);
-
-      print('[DF 타임라인 API] 상태코드: ${response.statusCode}');
-      print('[DF 타임라인 API] 응답 길이: ${response.body.length}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        print('[DF 타임라인 API] 파싱된 데이터 키: ${data.keys}');
-
-        // 전체 응답 출력 (처음 2000자)
-        final fullResponse = jsonEncode(data);
-        print('[DF 타임라인 API] 전체 응답: ${fullResponse.substring(0, 2000)}');
-
-        // timeline.rows에서 실제 데이터 추출
-        final timelineObj = data['timeline'] as Map<String, dynamic>?;
-        if (timelineObj == null) {
-          print('[DF 타임라인 API] timeline이 null입니다!');
-          return [];
+        if (next != null) {
+          params['next'] = next;
         }
 
-        final rows = timelineObj['rows'] as List?;
-        print('[DF 타임라인 API] rows 개수: ${rows?.length ?? 0}');
+        final url = Uri.https(
+          'api.neople.co.kr',
+          '/df/servers/$serverId/characters/$characterId/timeline',
+          params,
+        );
 
-        if (rows == null || rows.isEmpty) {
-          print('[DF 타임라인 API] rows가 비어있습니다');
-          return [];
+        print('[DF 타임라인 API] 페이지 $pageCount URL: $url');
+
+        final response = await _httpClient.get(url);
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+          final timelineObj = data['timeline'] as Map<String, dynamic>?;
+          if (timelineObj == null) break;
+
+          final rows = timelineObj['rows'] as List?;
+          if (rows != null && rows.isNotEmpty) {
+            allRows.addAll(rows.cast<Map<String, dynamic>>());
+            print('[DF 타임라인 API] 페이지 $pageCount: ${rows.length}개 추가 (총 ${allRows.length}개)');
+          }
+
+          next = timelineObj['next'] as String?;
+          if (next == null || next.isEmpty) {
+            print('[DF 타임라인 API] 마지막 페이지');
+            break;
+          }
+        } else {
+          print('[DF 타임라인 API] 페이지 $pageCount 오류: ${response.statusCode}');
+          break;
         }
+      } while (true);
 
-        final result = rows.cast<Map<String, dynamic>>();
-        print('[DF 타임라인 API] 첫 번째 항목: ${result[0]}');
-
-        return result;
-      }
-
-      print('[DF 타임라인 API] 오류: 상태코드 ${response.statusCode}');
-      print('[DF 타임라인 API] 응답 본문: ${response.body}');
-      return [];
+      print('[DF 타임라인 API] 최종 수집: ${allRows.length}개 데이터');
+      return allRows;
     } catch (e) {
       print('[DF 타임라인 API] 예외: $e');
       rethrow;
