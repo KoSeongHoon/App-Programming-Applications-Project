@@ -31,6 +31,12 @@ jobs:
           cd Planner
           echo "NEOPLE_API_KEY=${{ secrets.NEOPLE_API_KEY }}" > .env
 
+      - name: Create local.properties
+        run: |
+          cd Planner/android
+          echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
+          echo "flutter.sdk=${FLUTTER_ROOT}" >> local.properties
+
       - name: Get dependencies
         run: |
           cd Planner
