@@ -61,6 +61,16 @@ jobs:
             -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
             -dname "CN=DungeonFighterPlanner, O=Personal, L=Seoul, S=Seoul, C=KR"
 
+      - name: Create key.properties
+        run: |
+          cd Planner/android/app
+          cat > key.properties << EOF
+          keyAlias=upload-key
+          keyPassword=${{ secrets.KEYSTORE_PASSWORD }}
+          storeFile=${{ github.workspace }}/upload-keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          EOF
+
       - name: Build APK (split by ABI)
         run: |
           cd Planner
