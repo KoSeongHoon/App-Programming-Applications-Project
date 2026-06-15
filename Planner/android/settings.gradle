@@ -1,6 +1,15 @@
 pluginManagement {
-    def flutterSdkPath = "C:/Users/고성훈/flutter"
-    
+    def flutterSdkPath = {
+        if (System.env.FLUTTER_ROOT) {
+            return System.env.FLUTTER_ROOT
+        }
+        if (System.env.FLUTTER_HOME) {
+            return System.env.FLUTTER_HOME
+        }
+        // Local development fallback
+        return "C:/Users/고성훈/flutter"
+    }()
+
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
