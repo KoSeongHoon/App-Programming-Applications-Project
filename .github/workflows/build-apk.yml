@@ -1,0 +1,77 @@
+name: Build APK and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: 'stable'
+
+      - name: Create .env file
+        run: |
+          cd Planner
+          echo "NEOPLE_API_KEY=${{ secrets.NEOPLE_API_KEY }}" > .env
+
+      - name: Get dependencies
+        run: |
+          cd Planner
+          flutter pub get
+
+      - name: Clean build
+        run: |
+          cd Planner
+          flutter clean
+
+      - name: Build APK (split by ABI)
+        run: |
+          cd Planner
+          flutter build apk --release --split-per-abi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Planner/build/app/outputs/flutter-apk/app-*.apk
+          draft: false
+          prerelease: false
+          body: |
+            # 던파플래너 ${{ github.ref_name }}
+
+            ## 설치 방법
+            1. 아래의 APK 파일을 다운로드
+            2. 안드로이드 휴대폰에서 `설정 → 보안 → 알 수 없는 출처` 활성화
+            3. 다운로드한 APK 파일 실행 및 설치
+
+            ## 파일 설명
+            - `app-arm64-v8a-release.apk`: 최신 안드로이드 기기 (권장)
+            - `app-armeabi-v7a-release.apk`: 구형 안드로이드 기기
+
+            **더 자세한 정보**: [GitHub](https://github.com/${{ github.repository }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-apk
+          path: Planner/build/app/outputs/flutter-apk/app-*.apk
+          retention-days: 30
