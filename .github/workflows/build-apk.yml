@@ -51,10 +51,25 @@ jobs:
           cd Planner
           flutter clean
 
+      - name: Generate signing key
+        run: |
+          cd Planner/android/app
+          keytool -genkey -v -keystore ~/upload-keystore.jks \
+            -keyalg RSA -keysize 2048 -validity 10950 \
+            -alias upload-key \
+            -keypass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+            -dname "CN=DungeonFighterPlanner, O=Personal, L=Seoul, S=Seoul, C=KR"
+
       - name: Build APK (split by ABI)
         run: |
           cd Planner
           flutter build apk --release --split-per-abi
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/upload-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_KEY_ALIAS: upload-key
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
