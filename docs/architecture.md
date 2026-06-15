@@ -1,363 +1,383 @@
-# 던전앤파이터 플래너 — 아키텍처 가이드
+# 아키텍처 — 4-Layer Architecture
 
-신입 개발자도 이해할 수 있는 시스템 아키텍처 설명입니다.
-
----
-
-## 🎯 핵심 개념 5가지
-
-### 1. **MVC (Model-View-Controller)**
-앱을 3가지 부분으로 나눕니다:
-- **View (화면)**: 사용자가 보는 것 (UI, 버튼, 텍스트)
-- **Controller (처리)**: View와 Model 사이의 중개자
-- **Model (데이터)**: 앱의 정보 (캐릭터 정보, 강화 계획 등)
-
-```
-사용자 입력
-   ↓
-[View] → [Controller] → [Model] → 저장소
-   ↑                                    ↓
-   └─────────────── 데이터 반환 ────────┘
-```
-
-### 2. **Flutter의 상태 관리 라이브러리 Riverpod**
-앱의 상태를 관리하는 도구:
-- 여러 화면에서 같은 데이터를 쉽게 공유
-- 데이터 변경 시 자동으로 UI 업데이트
-- 타입 안전 (오류 방지)
-
-### 3. **SQLite (로컬 저장소)**
-휴대폰 내부에 데이터를 저장:
-- 앱을 종료해도 데이터 유지
-- SQL 쿼리로 강력한 데이터 조작 가능
-- 강화 계획, 플래너 항목 등 저장
-
-### 4. **캐싱 (빠른 로딩)**
-두 단계 캐싱:
-- **메모리 캐시**: 매우 빠름 (앱 종료 시 삭제)
-- **디스크 캐시**: 다소 느림 (앱 재시작 후에도 유지)
-
-```
-1차 시도: 메모리에서 찾기
-           ↓ (없으면)
-2차 시도: 디스크에서 찾기
-           ↓ (없으면)
-3차 시도: 인터넷에서 가져오기
-```
-
-### 5. **자동 감지 (편리함)**
-타임라인에서 콘텐츠 클리어를 자동으로 감지:
-- 사용자가 플래너에 "상급던전" 추가
-- 앱이 타임라인에서 "상급던전 클리어" 찾음
-- 자동으로 체크 표시
+던전앤파이터 플래너 앱의 아키텍처는 Clean Architecture의 4-Layer 패턴을 따릅니다.
 
 ---
 
-## 📁 폴더 구조 이해하기
+## 📐 4개 계층 구조
+
+### 시각적 계층도
+
+```mermaid
+graph TD
+    A["🎨 Presentation Layer<br/>UI, Screen, View, Widget<br/><br/>lib/presentation/"]
+    B["🔄 Application Layer<br/>ViewModel, UseCase, Provider, State<br/><br/>lib/application/"]
+    C["💼 Domain Layer<br/>Entity, Service, Rule<br/><br/>lib/domain/"]
+    D["💾 Data Layer<br/>Repository, API, DB, Model<br/><br/>lib/data/"]
+    
+    A -->|상태 변경 요청| B
+    B -->|비즈니스 로직| C
+    C -->|데이터 접근| D
+    D -->|상태 반환| C
+    C -->|변환된 데이터| B
+    B -->|새 상태| A
+    
+    style A fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style D fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+```
+
+### 텍스트 계층도
+
+```
+┌─────────────────────────────────────────────┐
+│  🎨 Presentation Layer                      │
+│  (UI, Screen, View, Widget)                 │
+│  "화면을 그려요"                             │
+└────────────────┬────────────────────────────┘
+                 ↓ (이벤트 전달)
+┌─────────────────────────────────────────────┐
+│  🔄 Application Layer                       │
+│  (ViewModel, UseCase, Provider, State)      │
+│  "상태를 관리해요"                           │
+└────────────────┬────────────────────────────┘
+                 ↓ (로직 요청)
+┌─────────────────────────────────────────────┐
+│  💼 Domain Layer                            │
+│  (Entity, Service, Rule, UseCase)           │
+│  "핵심 규칙을 정해요"                        │
+└────────────────┬────────────────────────────┘
+                 ↓ (데이터 요청)
+┌─────────────────────────────────────────────┐
+│  💾 Data Layer                              │
+│  (Repository, API, DB, Model)               │
+│  "API/DB를 관리해요"                         │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## 🏗️ 디렉토리 구조 (파일 위치로 구성)
 
 ```
 lib/
-├── main.dart              ← 앱의 시작점 (여기서 시작)
+├── main.dart                           # 앱 진입점
+├── app.dart                            # 루트 위젯 (MaterialApp)
 │
-├── models/                ← 데이터 구조 정의
-│   ├── character.dart     (캐릭터 정보)
-│   ├── timeline_event.dart (타임라인 이벤트)
-│   └── ...
+├── presentation/                       # 🎨 UI 계층 (screens/, widgets/, theme/)
+│   ├── screens/
+│   │   ├── character_search_screen.dart
+│   │   ├── planner_screen.dart
+│   │   └── timeline_screen.dart
+│   │
+│   ├── widgets/
+│   │   ├── character_card.dart
+│   │   ├── planner_list_item.dart
+│   │   ├── timeline_list.dart
+│   │   └── search_form.dart
+│   │
+│   └── theme/
+│       ├── app_theme.dart
+│       └── colors.dart
 │
-├── screens/               ← 화면들 (사용자가 보는 것)
-│   ├── home_screen.dart
-│   ├── character_search_screen.dart
-│   └── ...
+├── application/                        # 🔄 상태 관리 계층 (view_models/, use_cases/)
+│   ├── view_models/
+│   │   ├── character_search_vm.dart
+│   │   ├── planner_vm.dart
+│   │   └── timeline_vm.dart
+│   │
+│   └── use_cases/
+│       ├── search_character_uc.dart
+│       ├── update_planned_content_uc.dart
+│       └── match_timeline_uc.dart
 │
-├── widgets/               ← 화면의 작은 부품들
-│   ├── character_card.dart
-│   ├── progress_bar.dart
-│   └── ...
+├── domain/                             # 💼 비즈니스 로직 계층 (entities/, services/)
+│   ├── entities/
+│   │   ├── character.dart
+│   │   ├── planned_content.dart
+│   │   └── timeline.dart
+│   │
+│   └── services/
+│       ├── character_service.dart
+│       └── timeline_service.dart
 │
-├── providers/             ← 상태 관리 (Flutter의 상태 관리 라이브러리 Riverpod)
-│   ├── character_provider.dart
-│   └── ...
-│
-├── repositories/          ← 데이터 접근 (어디서 가져올지 결정)
-│   ├── character_repository.dart
-│   └── ...
-│
-├── services/              ← 실제 작업 수행
-│   ├── neople_api_service.dart (인터넷에서 가져오기)
-│   ├── database_service.dart   (SQLite에서 가져오기)
-│   └── cache_service.dart      (캐시에서 가져오기)
-│
-└── utils/                 ← 자주 쓰는 함수들
-    ├── constants.dart (상수들)
-    └── logger.dart    (로깅)
-```
-
-### 🎯 폴더별 역할 정리
-
-| 폴더 | 역할 | 예시 |
-|------|------|------|
-| **models/** | 데이터 구조 정의 | `class Character { ... }` |
-| **screens/** | 전체 화면 | `class CharacterSearchScreen extends...` |
-| **widgets/** | 화면의 부품 | 카드, 버튼, 진행률 바 |
-| **providers/** | 상태 저장 & 업데이트 (Flutter의 상태 관리 라이브러리 Riverpod) | `final characterProvider = ...` |
-| **repositories/** | 데이터를 어디서 가져올지 | API? DB? 캐시? |
-| **services/** | 실제 작업 | API 호출, DB 저장, 캐시 관리 |
-| **utils/** | 자주 쓰는 도구 | 상수, 함수, 확장 메서드 |
-
----
-
-## 🔄 데이터 흐름 쉽게 이해하기
-
-### **상황 1: 캐릭터 검색하기**
-
-```
-┌─────────────────────────────────┐
-│ 사용자가 "고성훈" 검색          │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 화면(Screen)이 요청             │
-│ "고성훈 정보를 줘!"            │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 상태관리(Provider)가 받음       │
-│ Repository에 "가져와줄래?"     │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ Repository가 받음               │
-│ 1. 메모리 캐시 확인            │
-│ 2. 디스크 캐시 확인            │
-│ 3. 인터넷(API) 요청            │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 결과 반환                       │
-│ 캐릭터 정보를 찾음              │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 화면에 표시                     │
-│ "고성훈 - Lv.110 - 검술사"    │
-└─────────────────────────────────┘
-```
-
-### **상황 2: 타임라인 자동 감지**
-
-```
-┌─────────────────────────────────┐
-│ 사용자: "상급던전" 추가         │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 앱이 타임라인 API 호출          │
-│ "최근 90일 활동 보여줘!"       │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 타임라인 데이터 받음            │
-│ [                               │
-│   {code: "123001", msg: "..."},│
-│   {code: "123002", msg: "..."},│
-│   ...                           │
-│ ]                               │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│ 매칭 엔진이 작동                │
-│ 1단계: 코드 비교                │
-│   "상급던전" = "123001"?       │
-│   YES! → 자동 체크             │
-└──────────────────────────────────┘
-         또는
-┌──────────────────────────────────┐
-│ 2단계: 텍스트 비교              │
-│   메시지에 "상급던전" 포함?    │
-│   YES! → 자동 체크             │
-└────────────┬───────────────────┘
-             │
-┌────────────▼───────────────────┐
-│ 결과 저장 & 화면 업데이트      │
-│ "상급던전 ✓" 표시             │
-└───────────────────────────────┘
+└── data/                               # 💾 외부 데이터 계층 (repositories/, api/, local/)
+    ├── repositories/
+    │   ├── character_repository.dart
+    │   ├── planner_repository.dart
+    │   └── timeline_repository.dart
+    │
+    ├── api/
+    │   ├── neople_api_client.dart
+    │   ├── models/
+    │   │   ├── character_model.dart
+    │   │   └── timeline_model.dart
+    │   └── services/
+    │       └── http_service.dart
+    │
+    └── local/
+        ├── database_service.dart
+        ├── models/
+        │   └── planned_content_model.dart
+        └── migrations/
+            └── v1_schema.dart
 ```
 
 ---
 
-## 💾 데이터베이스 구조
+## 📊 각 계층별 책임 & 위치 이유
 
-### **테이블 간 관계**
+### 1️⃣ Presentation Layer (UI만 담당)
+**위치**: `lib/presentation/`
 
-```
-┌─────────────────┐
-│   characters    │ (캐릭터 정보)
-│  (characterId)  │ ← 기준
-└────────┬────────┘
-         │
-    ┌────┴──────────────────┐
-    │                       │
-┌───▼──────────┐  ┌────────▼──────┐
-│ planner_items│  │timeline_events│
-│(여행 일정)    │  │(활동 기록)    │
-└──────────────┘  └───────────────┘
-         │
-┌────────▼───────────┐
-│ enhancement_plans  │
-│  (강화 계획)        │
-└────────────────────┘
-```
+**책임:**
+- UI 렌더링
+- 사용자 이벤트 감지
+- ViewModel에 이벤트 전달
 
-### **예시: 데이터 저장 흐름**
+**왜 이 위치에?**
+- 🎨 **시각적 요소만 집중**: 파일 수정 시 가장 자주 변경되는 계층
+- 👥 **디자이너 협업**: UI/UX 담당자가 쉽게 찾을 수 있음
+- 🔍 **명확한 화면 구조**: `screens/` 폴더로 화면별 파일 정리
 
-```
-1. 캐릭터 추가
-   INSERT INTO characters (characterId, nickname, level)
-   VALUES ('char-123', '고성훈', 110);
-
-2. 콘텐츠 추가
-   INSERT INTO planner_items (characterId, contentName)
-   VALUES ('char-123', '상급던전');
-
-3. 타임라인 조회
-   SELECT * FROM timeline_events 
-   WHERE characterId = 'char-123'
-   AND eventDate > NOW() - INTERVAL 90 DAY;
-
-4. 자동 매칭 & 체크
-   UPDATE planner_items 
-   SET isCompleted = 1 
-   WHERE characterId = 'char-123' 
-   AND contentName = '상급던전';
-```
+**금지사항:**
+- ❌ 비즈니스 로직 (if문으로 데이터 검증)
+- ❌ API 호출 (Http 통신)
+- ❌ DB 접근 (데이터 쓰기)
 
 ---
 
-## 🔄 요청-응답 생명주기
+### 2️⃣ Application Layer (상태 관리)
+**위치**: `lib/application/`
 
-```
-앱 시작
-  ↓
-[화면 표시] → 사용자가 "검색" 버튼 클릭
-  ↓
-[상태 업데이트] → Flutter의 상태 관리 라이브러리 Riverpod이 요청을 받음
-  ↓
-[Repository 호출] → 어디서 데이터를 가져올지 결정
-  ↓
-[Service 호출] → 실제 작업 수행
-  │
-  ├─ API 호출 (인터넷)
-  ├─ DB 조회 (SQLite)
-  └─ 캐시 확인 (메모리)
-  ↓
-[데이터 반환] → 모여진 정보 정리
-  ↓
-[화면 업데이트] → 사용자가 결과를 봄
-```
+**책임:**
+- Riverpod Provider로 상태 관리
+- ViewModel에서 UI 이벤트 처리
+- Domain 계층(UseCase) 호출
+- 로딩/에러 상태 관리
+
+**왜 이 위치에?**
+- 🔄 **UI ↔ 비즈니스 로직 중개**: Presentation과 Domain 사이의 '다리' 역할
+- 📦 **상태 중앙 집중**: 모든 상태 변경이 여기를 거침
+- 🧪 **테스트 용이**: ViewModel만 테스트하면 UI 동작 검증 가능
+
+**역할:**
+- Presentation의 "검색 버튼 클릭" → Application의 "searchCharacter() 호출"
+- Domain의 "캐릭터 찾음" → Presentation의 "UI 업데이트"
 
 ---
 
-## 🚀 개발자가 알아야 할 핵심
+### 3️⃣ Domain Layer (비즈니스 로직)
+**위치**: `lib/domain/`
 
-### **새 기능 추가 시 순서**
+**책임:**
+- Entity 정의 (Character, PlannedContent, Timeline)
+- UseCase 구현
+- 타임라인 매칭 알고리즘
+- 외부 라이브러리 최소화 (순수 Dart)
 
-```
-1. Model 추가
-   ↓ 데이터 구조 정의 (class, 필드)
+**왜 이 위치에?**
+- 🧠 **핵심 규칙 집중**: "던전 클리어"란 무엇인가? "플래너 상태"는?
+- 🔌 **독립적 테스트**: 외부 의존성 없이 순수 로직만 검증
+- 🎯 **프로젝트의 심장**: 앱이 하는 일의 본질이 여기 있음
+- 🔄 **재사용성**: 다른 프로젝트에서 Domain 로직 재사용 가능
 
-2. Service 추가
-   ↓ 실제 작업 구현 (API 호출, DB 저장)
-
-3. Repository 추가
-   ↓ Service를 조율 (어디서 가져올지)
-
-4. Provider 추가
-   ↓ Riverpod 상태 관리 설정
-
-5. Screen/Widget 추가
-   ↓ UI 구현
-
-6. 테스트 작성
-   ↓ 모든 단계 검증
-```
-
-### **데이터 접근 규칙**
-
-```
-✅ 옳은 방법:
-   Screen → Provider → Repository → Service
-
-❌ 틀린 방법:
-   Screen → Service (중간 과정 생략)
-   Screen → Database (직접 접근)
-```
-
-### **Flutter의 상태 관리 라이브러리 Riverpod 사용**
-
+**예시:**
 ```dart
-// ✅ 좋은 예
-final characterProvider = FutureProvider((ref) async {
-  return repository.getCharacter();
-});
+// domain/entities/character.dart
+class Character {
+  final String name;
+  final int level;
+  
+  // 핵심 규칙: "고렙 캐릭터"의 정의
+  bool isHighLevel() => level >= 50;
+}
 
-// Screen에서 사용
-final character = ref.watch(characterProvider);
-
-// ❌ 나쁜 예
-// Service를 직접 호출
-final character = await service.getCharacter();
+// domain/services/timeline_service.dart
+class TimelineService {
+  // 핵심 규칙: "타임라인 자동 감지" 알고리즘
+  Timeline matchDungeonFromTimeline(String timeline) {
+    // 실제 매칭 로직...
+  }
+}
 ```
 
 ---
 
-## 🔒 에러 처리 원칙
+### 4️⃣ Data Layer (외부 데이터)
+**위치**: `lib/data/`
 
-```
-에러 발생
-  ├─ API 오류? → 3회 자동 재시도 (지수 백오프)
-  ├─ DB 오류? → 에러 로깅 + 사용자 알림
-  └─ 로직 오류? → 로깅 + 기본값 사용
+**책임:**
+- Neople API 호출
+- SQLite 읽고 쓰기
+- Model ↔ Entity 변환
+- Repository 구현
+
+**왜 이 위치에?**
+- 🔌 **외부 의존성 격리**: API/DB가 변경되어도 다른 계층은 영향 X
+- 🔄 **변환 담당**: API 응답 (Model) → 앱 내부 형식 (Entity)
+- 📱 **Repository 패턴**: "데이터가 어디서 왔는지" 캡슐화
+- 🔐 **보안 민감 정보**: API 키, DB 쿼리 등 한곳에서 관리
+
+**예시:**
+```dart
+// data/api/neople_api_client.dart
+class NeopleApiClient {
+  Future<CharacterModel> searchCharacter(String name) async {
+    // API 호출 (외부 의존성)
+  }
+}
+
+// data/repositories/character_repository.dart
+class CharacterRepository {
+  Future<Character> getCharacter(String name) async {
+    final model = await _apiClient.searchCharacter(name);
+    // Model → Entity 변환 (내부 형식으로)
+    return Character.fromModel(model);
+  }
+}
 ```
 
 ---
 
-## 📊 성능 최적화 전략
+## 🔄 데이터 흐름 & 계층 간 소통
 
-### **API 호출 최소화**
+### 캐릭터 검색 예시 (위에서 아래로, 다시 위로)
+
 ```
-캐시를 최대한 활용
-1시간 이내 같은 요청 → 캐시에서 로드
-1시간 경과 → API 다시 호출
+1️⃣ PRESENTATION LAYER (UI)
+   ┌─────────────────────────────────┐
+   │ User clicks "Search" button     │
+   │ CharacterSearchScreen.build()   │
+   └─────────────┬───────────────────┘
+                 │ ref.read(characterProvider.notifier)
+                 │    .searchCharacter(name)
+                 ↓
+                 
+2️⃣ APPLICATION LAYER (상태)
+   ┌─────────────────────────────────┐
+   │ CharacterSearchVM.searchCharacter│
+   │ - 로딩 상태 true로 변경          │
+   │ - UseCase 호출                   │
+   └─────────────┬───────────────────┘
+                 │ await searchCharacterUC.execute(name)
+                 ↓
+                 
+3️⃣ DOMAIN LAYER (비즈니스 로직)
+   ┌─────────────────────────────────┐
+   │ SearchCharacterUC.execute()     │
+   │ - 입력값 검증 (이름 빈칸 아닌가) │
+   │ - Repository 호출               │
+   └─────────────┬───────────────────┘
+                 │ await characterRepository.search(name)
+                 ↓
+                 
+4️⃣ DATA LAYER (외부 데이터)
+   ┌─────────────────────────────────┐
+   │ CharacterRepository.search()    │
+   │ - API 호출: Neople API          │
+   │ - 응답 받기: CharacterModel     │
+   │ - Model → Entity 변환           │
+   │ - DB 저장: SQLite               │
+   └─────────────┬───────────────────┘
+                 │ return Character(...)
+                 ↓
+
+← 역방향 (데이터 반환) ←
+
+3️⃣ DOMAIN: 데이터 검증 & 비즈니스 로직 적용
+   ↓
+2️⃣ APPLICATION: 상태 업데이트 (로딩 false, 데이터 저장)
+   ↓
+1️⃣ PRESENTATION: UI 자동 갱신 (Riverpod 반응성)
+   ↓
+   CharacterCard 표시 (이름, 직업, 레벨)
 ```
 
-### **메모리 사용 최적화**
+### 핵심 원칙: 단방향 의존성
+
 ```
-큰 리스트는 필요한 항목만 로드
-스크린샷이나 불필요한 이미지 제거
-주기적으로 메모리 정리
+Presentation → Application → Domain → Data
+    ↑                                   ↓
+    └───────────────────────────────────
+       (데이터는 아래에서 위로 반환)
 ```
+
+**각 계층은 "자신보다 아래" 계층에만 의존:**
+- ✅ Presentation은 Application 호출 (OK)
+- ✅ Application은 Domain 호출 (OK)
+- ✅ Domain은 Data 호출 (OK)
+- ❌ Presentation이 Data를 직접 호출 (금지!)
+- ❌ Data가 Application을 알아야 함 (금지!)
 
 ---
 
-## 🎯 아키텍처의 이점
+## ❓ 자주 묻는 질문
 
-| 이점 | 설명 |
-|------|------|
-| **테스트 용이** | Mock Service로 쉽게 테스트 |
-| **변경 용이** | 한 부분 수정이 다른 부분에 영향 최소 |
-| **재사용 가능** | 같은 로직 여러 곳에서 재사용 |
-| **협업 용이** | 각자 다른 부분 담당 가능 |
-| **확장 용이** | 새 기능 추가 시 기존 코드 수정 최소 |
+**Q: `character.dart`가 domain에 있는 이유는?**  
+A: 캐릭터의 "본질"(이름, 레벨)을 정의하기 때문. API 응답 형식(Model)과 앱 내부 형식(Entity)을 분리하려고.
+
+**Q: CharacterModel과 Character의 차이는?**  
+A: 
+- `Character` (domain) = 순수 데이터 + 검증 로직 (앱이 알아야 할 형식)
+- `CharacterModel` (data/api) = API 응답 형식 (Neople API의 JSON 구조)
+
+**Q: 왜 Repository가 필요한가?**  
+A: "데이터가 어디서 왔는지"를 숨기기 위해. 추후 API → DB로 변경해도 Application은 몰라도 됨.
+
+**Q: ViewModel이 StateNotifier인가?**  
+A: 정확히는 StateNotifier<State> 형태. Riverpod에서 상태를 관리하는 방식.
+
+**Q: domain/services/와 data/api/services/의 차이는?**  
+A:
+- `domain/services/` = 비즈니스 로직 (타임라인 매칭 알고리즘)
+- `data/api/services/` = 기술적 구현 (HTTP 요청 보내기)
 
 ---
 
-## 📚 추가 학습 자료
+## 📚 구조 요약표
 
-- **Riverpod 공식 문서**: https://riverpod.dev
-- **SQLite Flutter**: https://pub.dev/packages/sqflite
-- **Flutter 아키텍처**: https://codewithandrea.com/articles/flutter-state-management-riverpod/
+| 계층 | 폴더 | 주요 파일 | 역할 | 의존성 |
+|-----|------|---------|------|--------|
+| **Presentation** | `lib/presentation/` | screens/, widgets/, theme/ | UI 표시 | Application에 의존 |
+| **Application** | `lib/application/` | view_models/, use_cases/ | 상태 관리 | Domain에 의존 |
+| **Domain** | `lib/domain/` | entities/, services/ | 비즈니스 규칙 | 외부 의존 없음 (순수) |
+| **Data** | `lib/data/` | repositories/, api/, local/ | 데이터 접근 | 외부 API/DB 사용 |
 
 ---
 
-**프로젝트 아키텍처**: MVC + Flutter의 상태 관리 라이브러리 Riverpod + SQLite + Caching  
-**최종 업데이트**: 2026-05-04
+## 🔍 이 구조를 검증하는 방법
+
+**1. 파일이 올바른 위치에 있는가?**
+```bash
+# 각 폴더에 정말 필요한 파일만 있는지 확인
+lib/presentation/    # .dart 파일들 (UI만)
+lib/application/     # ViewModel 파일들 (상태)
+lib/domain/         # Entity, Service (순수 로직)
+lib/data/           # Repository, API, DB (외부 통신)
+```
+
+**2. 계층 간 의존성이 단방향인가?**
+```bash
+# 이 명령으로 검증 가능 (grep 사용)
+grep -r "import.*domain" lib/data/       # ❌ 불가능
+grep -r "import.*data" lib/domain/       # ❌ 불가능
+grep -r "import.*application" lib/data/  # ❌ 불가능
+```
+
+**3. 금지 사항이 지켜졌는가?**
+- Presentation에서 http import? ❌
+- Application에서 Widget import? ❌
+- Domain에서 package: 외부 라이브러리 import? ❌
+
+---
+
+**작성일**: 2026-05-18  
+**버전**: 1.0 (11주차 완성)  
+**패턴**: 4-Layer Clean Architecture  
+**상태 관리**: Riverpod (ADR-0001)  
+**DB**: SQLite (ADR-0002)  
+**API**: Neople API  
+
+**다음 검토**: 12주차 실제 구현 시작 후 (구조 재확인)
