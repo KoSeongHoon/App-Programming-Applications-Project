@@ -53,8 +53,7 @@ jobs:
 
       - name: Generate signing key
         run: |
-          cd Planner/android/app
-          keytool -genkey -v -keystore ~/upload-keystore.jks \
+          keytool -genkey -v -keystore ${{ github.workspace }}/upload-keystore.jks \
             -keyalg RSA -keysize 2048 -validity 10950 \
             -alias upload-key \
             -keypass ${{ secrets.KEYSTORE_PASSWORD }} \
