@@ -334,7 +334,7 @@ class _CharacterSearchScreenState extends ConsumerState<CharacterSearchScreen> {
 
     // 필터에 따라 검색 타입 결정
     final isGuildSearch = _selectedFilter == '모험단';
-    final server = '전체';
+    final server = isGuildSearch ? '전체' : _selectedFilter;
 
     ref
         .read(characterSearchViewModelProvider.notifier)
