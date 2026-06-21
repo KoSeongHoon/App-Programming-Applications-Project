@@ -26,7 +26,7 @@ h3 { color: #4caf50; margin-bottom: 20px; }
 .feature-title { font-size: 1.25em; color: #4caf50; font-weight: 600; margin-bottom: 8px; }
 .feature-desc { font-size: 1.1em; line-height: 1.5; color: #d0d0d0; }
 .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 30px 0; }
-.controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100; }
+.controls { position: fixed; bottom: 30px; right: 30px; display: none; gap: 15px; z-index: 100; }
 button { background: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #4caf50; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 1.15em; transition: all 0.3s ease; }
 button:hover { background: rgba(76, 175, 80, 0.4); }
 .slide-counter { position: fixed; bottom: 30px; left: 30px; color: #888; font-size: 1em; }
